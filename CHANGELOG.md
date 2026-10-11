@@ -1,8 +1,8 @@
 # Historial de cambios — Void Rescue II
 
-Este historial describe el desarrollo activo de la versión web de **Void Rescue II**, que queda cerrado con la primera versión estable **v1.0.0**.
+Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; **v1.0.1** es una actualización menor de mantenimiento.
 
-## Mantenimiento posterior a v1.0.0 — 11 de octubre de 2026
+## [v1.0.1] — 11 de octubre de 2026
 
 - Explosiones de naves con partículas y destellos adaptados al color del cielo, reutilizando el contraste complementario del HUD.
 - Contraste de partículas oscuras sobre cielos claros y actualización de paleta al cambiar de paisaje, incluso con rotación aleatoria reproducible por semilla.
