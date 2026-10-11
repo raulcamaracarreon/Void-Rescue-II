@@ -269,6 +269,7 @@ export class Interface {
     if (!state.enabled) { get('#world-labels').innerHTML = ''; return; }
     const live = state.colonists.filter(c => c.status !== 'lost').length;
     const carrying = state.colonists.filter(c => c.status === 'carried').length;
+    const passengers = state.colonists.filter(c => c.status === 'carried' && c.onboard).length;
     const extracting = state.colonists.some(c => c.status === 'extracting');
     const lifeSlots = Math.max(state.lives, DIFFICULTIES[state.difficulty].lifeCap);
     const dynamic = state.spawnMode === 'dynamic';
@@ -278,18 +279,18 @@ export class Interface {
       ? `<span>RESISTIR <b>${remaining}s</b></span><span>MÍNIMO <b>${goal.minimum}</b></span>`
       : `<span>POR RESOLVER <b>${state.colonists.filter(c => c.status !== 'safe' && c.status !== 'lost').length}</b></span>`
       : '';
-    get('#combat-stats').innerHTML = `<span>PUNTOS <b>${String(state.score).padStart(6, '0')}</b></span><span>NAVES <b>${'◆'.repeat(state.lives)}${'◇'.repeat(lifeSlots - state.lives)}</b></span><span>BOMBAS <b>${state.bombs}</b></span><span>COLONOS <b>${live}/${state.colonists.length}</b></span><span>A SALVO <b>${state.delivered}</b></span><span>AMENAZAS <b>${state.enemies.length + (dynamic ? 0 : state.schedule.length - state.spawnIndex)}</b></span>${objective}`;
+    get('#combat-stats').innerHTML = `<span>PUNTOS <b>${String(state.score).padStart(6, '0')}</b></span><span>NAVES <b>${'◆'.repeat(state.lives)}${'◇'.repeat(lifeSlots - state.lives)}</b></span><span>BOMBAS <b>${state.bombs}</b></span><span>COLONOS <b>${live}/${state.colonists.length}</b></span><span>A SALVO <b>${state.delivered}</b></span>${state.missionMode === 'rescue' ? `<span>A BORDO <b>${passengers}/${state.colonists.length}</b></span>` : ''}<span>AMENAZAS <b>${state.enemies.length + (dynamic ? 0 : state.schedule.length - state.spawnIndex)}</b></span>${objective}`;
     const event = [...state.events].reverse().find(e => !['spawn', 'impact', 'explosion'].includes(e.kind) && state.time - e.time < 3);
     const messages: Partial<Record<GameEvent['kind'], string>> = {
-      capture: '¡CAPTURA DETECTADA! Intercepta al abductor', extraction: 'EXTRACCIÓN INICIADA · Mantén la nave cerca', falling: 'COLONO EN CAÍDA · Atrápalo antes de llegar al suelo',
+      capture: '¡CAPTURA DETECTADA! Intercepta al abductor', extraction: 'HAZ ACTIVO · Mantén E / Y pulsado hasta completar el ascenso', falling: 'COLONO EN CAÍDA · Atrápalo antes de llegar al suelo',
       landing: 'COLONO EN TIERRA · Ha sobrevivido a la caída', rescue: 'COLONO A BORDO · Desciende y frena para entregarlo',
       delivery: 'ENTREGA SEGURA · Portal disponible en el radar', lost: 'COLONO PERDIDO', mutation: 'ABDUCCIÓN COMPLETADA · WRAITH ACTIVO',
       'bomb-charge': 'CARGANDO BOMBA', bomb: 'BOMBA DETONADA', portal: 'SALTO COMPLETADO · +1000 por el primer salto',
       'player-hit': 'NAVE DESTRUIDA', respawn: 'REAPARICIÓN · ESCUDO TEMPORAL',
     };
     const message = !state.player.alive ? `REAPARICIÓN EN ${Math.max(0, state.respawnTimer).toFixed(1)} s`
-      : extracting ? 'HAZ DE EXTRACCIÓN ACTIVO · Mantén la nave sobre el colono'
-      : carrying && state.missionMode === 'rescue' ? `COLONO A BORDO · Regresa a ${SAFE_BASE.name} y aterriza`
+      : extracting ? `EXTRACCIÓN EN CURSO · Mantén ${gamepad ? 'Y/△' : 'E'} y la nave cerca`
+      : passengers > 0 ? `${passengers} A BORDO · Puedes recoger más o aterrizar en ${SAFE_BASE.name}`
       : carrying ? `COLONO A BORDO · Baja al terreno y frena por debajo de 22 u/s`
       : state.colonists.some(c => c.status === 'falling') ? 'COLONO EN CAÍDA · Busca ↓ en el radar y atrápalo'
       : event && messages[event.kind] ? messages[event.kind]!
@@ -299,7 +300,7 @@ export class Interface {
       : dynamic && state.missionMode === 'defense' ? `DEFENSA POR ZONAS · ${remaining}s · ${live}/${goal.minimum} supervivientes`
          : 'PROTEGE A LOS COLONOS · Usa el radar para localizar capturas';
     if (get('#combat-message').textContent !== message) get('#combat-message').textContent = message;
-    const labels = state.colonists.filter(c => c.status !== 'lost' && Math.abs(signedWrappedDeltaX(metrics.cameraX, c.x, CONFIG.worldWidth)) < metrics.viewWidth / 2 - 3)
+    const labels = state.colonists.filter(c => c.status !== 'lost' && !c.onboard && Math.abs(signedWrappedDeltaX(metrics.cameraX, c.x, CONFIG.worldWidth)) < metrics.viewWidth / 2 - 3)
       .map(c => {
         const x = 50 + signedWrappedDeltaX(metrics.cameraX, c.x, CONFIG.worldWidth) / metrics.viewWidth * 100;
         const y = (108 - c.y - (c.status === 'carried' ? 6 : 0)) / CONFIG.viewHeight * 100;
