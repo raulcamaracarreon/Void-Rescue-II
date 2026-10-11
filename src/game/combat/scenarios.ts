@@ -1,8 +1,9 @@
 import { populateColonists, waveSchedule } from './Progression';
 import type { CombatContext } from './types';
 import { spawnEnemy } from './EnemySystem';
+import { initializeDirector } from './DynamicDirector';
 
-export const SCENARIOS = ['flight-basic', 'world-seam', 'combat-basic', 'abduction-start', 'falling-colonist',
+export const SCENARIOS = ['flight-basic', 'world-seam', 'combat-basic', 'dynamic-basic', 'abduction-start', 'falling-colonist',
   'portal-ready', 'wave-near-complete', 'player-near-death', 'last-life', 'combat-showcase', 'rescue-pickup'] as const;
 export type ScenarioName = typeof SCENARIOS[number];
 
@@ -11,6 +12,13 @@ export function initializeScenario(ctx: CombatContext, name: ScenarioName): void
   if (!s.enabled) return;
   populateColonists(ctx);
   if (name === 'combat-basic') { s.schedule = waveSchedule(1, s.seed, s.difficulty); return; }
+  if (name === 'dynamic-basic') {
+    s.spawnMode = 'dynamic';
+    s.schedule = [];
+    s.spawnIndex = 0;
+    s.director = initializeDirector();
+    return;
+  }
   p.invulnerable = 0;
   const c = s.colonists[0]!;
   if (name === 'rescue-pickup') {
