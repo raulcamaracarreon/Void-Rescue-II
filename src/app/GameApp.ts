@@ -15,6 +15,7 @@ import type { PlayerRecord } from '../game/Records';
 import { RecordsPanel } from '../ui/RecordsPanel';
 import { wavePressure } from '../game/combat/Progression';
 import { missionMode } from '../game/MissionMode';
+import { spawnMode } from '../game/SpawnMode';
 import { LandscapePanel } from '../ui/LandscapePanel';
 import { defaultLandscapePreferences, resolveLandscape, sanitizeLandscapePreferences } from '../landscape/LandscapeConfig';
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
@@ -26,7 +27,7 @@ function readLandscapePreferences(): LandscapePreferences {
 }
 
 function readPreferences(): Preferences {
-  const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense' };
+  const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense', spawnMode: 'classic' };
   try {
     const data: unknown = JSON.parse(localStorage.getItem('void-rescue.preferences') ?? '{}');
     if (typeof data !== 'object' || !data) return defaults;
@@ -37,6 +38,7 @@ function readPreferences(): Preferences {
       volume: typeof value.volume === 'number' && Number.isFinite(value.volume) ? Math.max(0, Math.min(1, value.volume)) : defaults.volume,
       difficulty: difficulty(value.difficulty),
       missionMode: missionMode(value.missionMode),
+      spawnMode: spawnMode(value.spawnMode),
     };
   } catch { return defaults; }
 }
@@ -178,7 +180,9 @@ export class GameApp {
     this.saveRecord();
     this.run = { id: crypto.randomUUID(), pilot: this.records.pilot, difficulty: this.preferences.difficulty, missionMode: this.preferences.missionMode, date: new Date().toISOString() };
     this.unlockAudio();
-    this.simulation = new Simulation(this.simulation.state.seed, 'combat-basic', this.preferences.difficulty, this.preferences.missionMode);
+    this.simulation = new Simulation(this.simulation.state.seed,
+      this.preferences.spawnMode === 'dynamic' ? 'dynamic-basic' : 'combat-basic',
+      this.preferences.difficulty, this.preferences.missionMode, this.preferences.spawnMode);
     this.audio.resetEvents(); this.lastTeleport = 0;
     this.graphics.reset(this.simulation.state, false);
     this.setMode('playing');
@@ -186,7 +190,7 @@ export class GameApp {
 
   restart(): void {
     if (this.simulation.state.enabled) { this.start(); return; }
-    this.simulation = new Simulation(this.simulation.state.seed, this.simulation.state.enabled ? 'combat-basic' : 'flight-basic', this.preferences.difficulty, this.preferences.missionMode);
+    this.simulation = new Simulation(this.simulation.state.seed, this.simulation.state.enabled ? (this.preferences.spawnMode === 'dynamic' ? 'dynamic-basic' : 'combat-basic') : 'flight-basic', this.preferences.difficulty, this.preferences.missionMode);
     this.audio.resetEvents(); this.lastTeleport = 0;
     this.graphics.reset(this.simulation.state, false);
     this.setMode('playing');
@@ -232,6 +236,7 @@ export class GameApp {
     this.preferences = preferences;
     this.simulation.setDifficulty(preferences.difficulty);
     this.simulation.setMissionMode(preferences.missionMode);
+    // Spawn type belongs to the run and can only be chosen on the title screen.
     this.audio.setMuted(preferences.muted);
     this.audio.setVolume(preferences.volume);
     this.ui.syncMuted(preferences.muted);
@@ -293,7 +298,8 @@ export class GameApp {
           colonists: this.simulation.state.colonists.filter(c => c.status !== 'lost').length, projectiles: this.simulation.state.shots.length,
           particles: this.graphics.combat.particleCount },
         wave: { number: this.simulation.state.wave, pressure: wavePressure(this.simulation.state.wave), ranked: Boolean(this.run), outcome: this.simulation.state.outcome, score: this.simulation.state.score, delivered: this.simulation.state.delivered,
-          remainingSpawns: this.simulation.state.schedule.length - this.simulation.state.spawnIndex },
+          remainingSpawns: this.simulation.state.spawnMode === 'dynamic' ? null : this.simulation.state.schedule.length - this.simulation.state.spawnIndex,
+          spawnMode: this.simulation.state.spawnMode, dynamicSpawned: this.simulation.state.director?.spawned ?? 0 },
         difficulty: this.preferences.difficulty, speed: DIFFICULTIES[this.preferences.difficulty].speed,
         difficultyProfile: { ...DIFFICULTIES[this.preferences.difficulty] },
         controller: this.input.controller.snapshot(), droppedSeconds: this.clock.droppedSeconds, audioError: this.audioError }),
