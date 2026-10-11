@@ -10,6 +10,50 @@ test.beforeEach(async ({ page }, info) => {
   await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
 });
 
+test('permite guardar varios mundos propios y agregarlos a la rotación de oleadas', async ({ page }) => {
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
+  const style = dialog.getByRole('combobox', { name: 'Estilo de paisaje' });
+  expect(await style.locator('option').count()).toBe(15); // cycle + 13 presets + draft
+  await style.selectOption('martian_dusk');
+  await dialog.getByRole('textbox', { name: 'Nombre del paisaje' }).fill('Horizonte personal');
+  await dialog.getByRole('button', { name: 'Guardar nuevo' }).click();
+  await expect(style).toHaveValue(/user:/);
+  await dialog.getByRole('checkbox', { name: 'Incluir Horizonte personal en oleadas' }).check();
+  await dialog.getByRole('combobox', { name: 'Rotación de ambientes' }).selectOption('shuffle');
+  let prefs = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
+  expect(prefs.library).toHaveLength(1);
+  expect(prefs.library[0]!.name).toBe('Horizonte personal');
+  expect(prefs.library[0]!.style.automatic!.skyColor).toBe('#f04b27');
+  expect(prefs.cyclePool).toContain('user:' + prefs.library[0]!.id);
+  expect(prefs.rotation).toBe('shuffle');
+
+  await dialog.getByRole('button', { name: 'Duplicar' }).click();
+  prefs = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
+  expect(prefs.library).toHaveLength(2);
+  expect(prefs.library[1]!.name).toContain('(copia)');
+  await dialog.getByRole('textbox', { name: 'Nombre del paisaje' }).fill('Versión violeta');
+  await dialog.getByRole('button', { name: 'Renombrar' }).click();
+  await expect(style.locator('option', { hasText: 'Versión violeta' })).toHaveCount(1);
+
+  await dialog.getByRole('button', { name: /LISTO/ }).click();
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  const reopened = page.getByRole('dialog', { name: 'Personalizar paisaje' });
+  await expect(reopened.getByRole('combobox', { name: 'Estilo de paisaje' })
+    .locator('option', { hasText: 'Horizonte personal' })).toHaveCount(1);
+  await expect(reopened.getByRole('combobox', { name: 'Estilo de paisaje' })
+    .locator('option', { hasText: 'Versión violeta' })).toHaveCount(1);
+  await expect(reopened.getByRole('checkbox', { name: 'Incluir Horizonte personal en oleadas' })).toBeChecked();
+  await expect(reopened.getByRole('combobox', { name: 'Rotación de ambientes' })).toHaveValue('shuffle');
+  page.once('dialog', confirmation => confirmation.accept());
+  await reopened.getByRole('button', { name: 'Eliminar' }).click();
+  const afterDelete = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
+  expect(afterDelete.library).toHaveLength(1);
+  expect(afterDelete.cyclePool).toContain('user:' + afterDelete.library[0]!.id);
+});
+
 test('genera un gradiente de dos extremos y permite volver a edición avanzada sin perder sus cambios', async ({ page }) => {
   await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
