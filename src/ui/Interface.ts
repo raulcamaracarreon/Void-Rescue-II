@@ -15,7 +15,7 @@ export type AppMode = 'title' | 'playing' | 'paused' | 'result';
 export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode }
 export interface UiActions {
   start(): void; resume(): void; restart(): void; menu(): void; pause(): void;
-  mute(): void; fullscreen(): void; controller(): void; preferences(value: Preferences): void;
+  mute(): void; fullscreen(): void; controller(): void; landscape(): void; preferences(value: Preferences): void;
   result(): void; records(): void; pilot(value: string): void;
 }
 
@@ -44,7 +44,7 @@ export class Interface {
   constructor(private readonly root: HTMLElement, private readonly actions: UiActions, preferences: Preferences, pilot: string) {
     root.innerHTML = `
       <section class="title-screen" aria-labelledby="game-title">
-        <div class="topline"><span class="brandmark">V<span>R</span></span><span>COLONIAL RESPONSE DIVISION</span><span class="build-tag">OPERACIÓN RESCATE · 0.2</span></div>
+        <div class="topline"><span class="brandmark">V<span>R</span></span><span>COLONIAL RESPONSE DIVISION</span><span class="build-tag">VOID RESCUE II · ALFA</span></div>
         <div class="title-copy">
           <p class="eyebrow"><i></i> SECTOR 07 / PERÍMETRO EXTERIOR</p>
           <h1 id="game-title">VOID<br><span>RESCUE</span><b>↗</b></h1>
@@ -53,6 +53,7 @@ export class Interface {
           <div class="mission-settings"><label>MODO <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label></div>
           <div class="pilot-setting"><span>PILOTO</span>${[0, 1, 2].map(i => `<select class="pilot-initial" aria-label="Inicial ${i + 1}">${[...INITIALS].map(letter => `<option${pilot[i] === letter ? ' selected' : ''}>${letter}</option>`).join('')}</select>`).join('')}<button class="text-button" data-action="records">VER RÉCORDS ↗</button></div>
           <button class="primary" data-action="start">INICIAR VUELO <span>↗</span></button>
+          <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
           <button class="controller-open text-button" data-action="controller">CONFIGURAR MANDO USB ↗</button><p class="controller-status"></p>
           <div class="title-controls"><span><kbd>W A S D</kbd> Pilotar</span><span><kbd>ESPACIO</kbd> Disparar</span><span><kbd>SHIFT</kbd> Bomba</span></div>
           <p class="gamepad-note">Joypad: sur A/× disparar y confirmar · oeste X/□ bomba · norte Y/△ acción/portal<br>Stick/cruceta navegar · este B/○ volver · Start pausa</p>
@@ -62,7 +63,7 @@ export class Interface {
       </section>
       <section class="flight-hud" aria-label="Instrumentos de vuelo" hidden>
         <header class="instrument-panel">
-          <div class="hud-identity"><span class="brandmark">V<span>R</span></span><p>VOID RESCUE<small>VR—01 / RESPONDER</small></p></div>
+          <div class="hud-identity"><span class="brandmark">V<span>R</span></span><p>VOID RESCUE II<small>VR—01 / RESPONDER</small></p></div>
           <div class="radar-panel"><div class="radar-label"><span>RADAR / PERÍMETRO COMPLETO</span><span>◇ ESTACIÓN <b>▸ NAVE</b></span></div><canvas id="radar" aria-label="Radar panorámico del mundo circular"></canvas><div class="radar-scale"><span>0000</span><span>0600</span><span>1200</span><span>1800</span><span>2400</span></div></div>
           <div class="hud-actions"><button data-action="mute" aria-label="Silenciar audio" title="Silenciar (M)">AUDIO ON</button><button data-action="pause" aria-label="Pausar vuelo" title="Pausa (Esc)">II <span>PAUSA</span></button></div>
         </header>
@@ -80,6 +81,7 @@ export class Interface {
         <label class="setting">Volumen <input id="volume" type="range" min="0" max="100" step="5" aria-label="Volumen"></label>
         <label class="setting">Silenciar audio <input id="muted" type="checkbox"></label>
         <label class="setting">Reducir movimiento y destellos <input id="reduced" type="checkbox"></label>
+        <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
         <label class="setting">Dificultad <select aria-label="Dificultad" class="difficulty-select"></select></label>
         <button class="controller-open text-button" data-action="controller">CONFIGURAR MANDO USB ↗</button><p class="controller-status"></p>
         <button class="primary" data-action="resume">CONTINUAR VUELO <span>↗</span></button>

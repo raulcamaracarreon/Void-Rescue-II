@@ -1,6 +1,6 @@
 # Void Rescue II — hoja de ruta inicial
 
-**Estado:** línea de desarrollo independiente; fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
+**Estado:** objetivo 1 implementado y en revisión; objetivo 2 pendiente. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
 
 ## Principio de diseño
 
@@ -53,3 +53,19 @@ La validación de WebGPU y WebGL2, el rendimiento y la jugabilidad requieren eje
 ## Historial y atribución
 
 Este repositorio es una nueva línea de desarrollo derivada de la **instantánea** de Void Rescue I. El historial original sigue disponible en el repositorio fuente. Antes de una publicación final, verificar avisos y licencias aplicables a los componentes realmente redistribuidos.
+
+
+## Ejecución del objetivo 1 (2026-10-11)
+
+- [x] Cuatro presets, cambio automático por oleada y opción de estilo fijo.
+- [x] Generador determinista de siluetas repetibles, montañas y edificios con paralaje en Three.js.
+- [x] Editor de estilos con 2–10 capas, dos colores de cielo, estrellas, colores por capa, amplitud, detalle y semilla.
+- [x] Preferencias guardadas y validadas localmente.
+- [x] Reducción de movimiento, congelando desplazamiento relativo de estrellas, planeta y capas.
+- [x] Fuente original intacta; clasificación de récords de Void Rescue II separada.
+- [x] TypeScript, pruebas Vitest y build; 6/6 pruebas Playwright de paisajes a 960×540 en WebGPU automático/WebGL2.
+- [x] Capturas reales del primer ambiente Ciudad abandonada a 1920×1080 en ambos backends.
+- [ ] Revisión de fidelidad visual y control en el hardware del usuario; prueba exhaustiva de regresión del juego completo.
+- [ ] Objetivo 2: spawns dinámicos y nuevas condiciones de victoria.
+
+Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU dedicada: se mantuvieron las capturas de prueba visual y se ejecutaron las interacciones a 960×540, donde todos los casos aprobaron. No se extrapola ese resultado al rendimiento en otras máquinas.
