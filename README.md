@@ -13,6 +13,14 @@ Nueva versión independiente, derivada del código funcional de [Void Rescue I](
 
 **[Ver hoja de ruta y criterios técnicos](docs/VOID_RESCUE_II_ROADMAP.md)**.
 
+## Biblioteca de ambientes y oleadas
+
+Void Rescue II incluye **13 ambientes**: Noche estelar, Ciudad abandonada, Ocaso alienígena, Mundo glacial, Mundo volcánico, Pantano tóxico, Desierto de cobre, Metrópolis neón, Mundo de cenizas, Planeta amatista, **Ocaso Marciano**, **Nublado Polar** y **Planeta extraño**. Estos tres últimos están basados en las referencias de color proporcionadas durante el diseño.
+
+En **Personalizar paisaje** puedes seleccionar cualquier preset, conservar un borrador personalizado o **guardar varios paisajes con nombre**. La biblioteca ofrece **Guardar nuevo, Guardar cambios, Duplicar, Renombrar y Eliminar**. Los presets incluidos nunca se sobrescriben: al modificarlos se trabaja en una copia. Los paisajes guardados conservan individualmente su modo Automático/Avanzado y las capas, colores, semilla y estrellas.
+
+La sección **Ambientes de las oleadas** permite marcar por separado cualquier preset y los estilos guardados para la rotación: **Secuencial** o **Aleatorio sin repeticiones**. Este último baraja determinísticamente por semilla de partida y bloque de oleadas; solo repite un paisaje al terminar el conjunto habilitado, evitando repeticiones inmediatas entre bloques. El sistema migra los ajustes anteriores (incluido el antiguo paisaje `custom` como borrador editable) sin perderlos. Todo queda en el almacenamiento local de este navegador.
+
 ## Elegir el sistema de juego
 
 En el título, antes de iniciar un vuelo, aparecen tres controles independientes:
