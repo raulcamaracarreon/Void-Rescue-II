@@ -1,6 +1,7 @@
 import type { Random } from '../../core/Random';
 import type { FlightState } from '../Simulation';
 import type { Terrain } from '../Terrain';
+import type { SpawnMode } from '../SpawnMode';
 
 export type EnemyKind = 'harvester' | 'wraith' | 'interceptor' | 'flux' | 'drone' | 'crossfire';
 export type ColonistStatus = 'ground' | 'targeted' | 'captured' | 'extracting' | 'falling' | 'carried' | 'safe' | 'lost';
@@ -20,8 +21,16 @@ export type EventKind = 'spawn' | 'capture' | 'extraction' | 'falling' | 'landin
   | 'explosion' | 'impact' | 'bomb-charge' | 'bomb' | 'portal' | 'player-hit' | 'respawn' | 'victory' | 'defeat';
 export interface GameEvent { id: number; kind: EventKind; x: number; y: number; time: number }
 export interface SpawnEntry { at: number; kind: EnemyKind; x: number; y: number }
+export interface DynamicDirector {
+  /** Elapsed simulation seconds between spawn attempts, with a bounded population. */
+  timer: number;
+  sectorCooldown: number[];
+  spawned: number;
+}
 export interface CombatState {
   wave: number; waveStartedAt: number;
+  spawnMode: SpawnMode;
+  director: DynamicDirector | null;
   enabled: boolean; outcome: 'active' | 'victory' | 'defeat';
   colonists: Colonist[]; enemies: Enemy[]; events: GameEvent[];
   schedule: SpawnEntry[]; spawnIndex: number; score: number; kills: number;

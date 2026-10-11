@@ -10,11 +10,14 @@ import type { Difficulty } from '../game/Difficulty';
 import { INITIALS } from '../game/Records';
 import { MISSION_MODES } from '../game/MissionMode';
 import type { MissionMode } from '../game/MissionMode';
+import { SPAWN_MODES } from '../game/SpawnMode';
+import type { SpawnMode } from '../game/SpawnMode';
+import { defenseGoal } from '../game/combat/DynamicDirector';
 import { adaptivePalette } from '../landscape/AdaptivePalette';
 import type { LandscapeStyle } from '../landscape/LandscapeConfig';
 
 export type AppMode = 'title' | 'playing' | 'paused' | 'result';
-export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode }
+export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode; spawnMode: SpawnMode }
 export interface UiActions {
   start(): void; resume(): void; restart(): void; menu(): void; pause(): void;
   mute(): void; fullscreen(): void; controller(): void; landscape(): void; preferences(value: Preferences): void;
@@ -52,7 +55,7 @@ export class Interface {
           <h1 id="game-title">VOID<br><span>RESCUE</span><b>↗</b></h1>
           <p class="tagline">La colonia está lejos.<br>Tu nave es su primera respuesta.</p>
           <p class="title-description">Rescata colonos y sobrevive a oleadas cada vez más difíciles.<br>Sin última oleada. ¿Hasta dónde llegará tu récord?</p>
-          <div class="mission-settings"><label>MODO <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label></div>
+          <div class="mission-settings"><label>ENEMIGOS <select aria-label="Sistema de enemigos" class="spawn-mode-select"></select></label><label>MISIÓN <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label></div>
           <div class="pilot-setting"><span>PILOTO</span>${[0, 1, 2].map(i => `<select class="pilot-initial" aria-label="Inicial ${i + 1}">${[...INITIALS].map(letter => `<option${pilot[i] === letter ? ' selected' : ''}>${letter}</option>`).join('')}</select>`).join('')}<button class="text-button" data-action="records">VER RÉCORDS ↗</button></div>
           <button class="primary" data-action="start">INICIAR VUELO <span>↗</span></button>
           <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
@@ -115,6 +118,9 @@ export class Interface {
     this.volume = get('#volume'); this.reduced = get('#reduced'); this.muteCheck = get('#muted');
     this.volume.value = String(preferences.volume * 100); this.reduced.checked = preferences.reducedMotion; this.muteCheck.checked = preferences.muted;
     this.syncMuted(preferences.muted);
+    const spawnSelect = get<HTMLSelectElement>('.spawn-mode-select');
+    spawnSelect.innerHTML = Object.entries(SPAWN_MODES).map(([id, item]) => `<option value="${id}">${item.label}</option>`).join('');
+    spawnSelect.value = preferences.spawnMode;
     const missionSelect = get<HTMLSelectElement>('.mission-mode-select');
     missionSelect.innerHTML = Object.entries(MISSION_MODES).map(([id, item]) => `<option value="${id}">${item.label}</option>`).join('');
     missionSelect.value = preferences.missionMode;
@@ -124,12 +130,16 @@ export class Interface {
       select.value = preferences.difficulty;
       select.addEventListener('change', () => {
         difficultySelects.forEach(other => { other.value = select.value; });
-        actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: select.value as Difficulty, missionMode: missionSelect.value as MissionMode });
+        actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: select.value as Difficulty, missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode });
       });
     }
     missionSelect.addEventListener('change', () => actions.preferences({ volume: Number(this.volume.value) / 100,
       reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: difficultySelects[0]!.value as Difficulty,
-      missionMode: missionSelect.value as MissionMode }));
+      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode }));
+    spawnSelect.addEventListener('change', () => actions.preferences({ volume: Number(this.volume.value) / 100,
+      reducedMotion: this.reduced.checked, muted: this.muteCheck.checked,
+      difficulty: difficultySelects[0]!.value as Difficulty,
+      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode }));
 
     root.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button => {
       button.addEventListener('click', () => {
@@ -144,7 +154,8 @@ export class Interface {
     this.result.addEventListener('cancel', event => { event.preventDefault(); actions.menu(); });
     for (const input of [this.volume, this.reduced, this.muteCheck]) input.addEventListener('input', () => {
       actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked,
-        difficulty: difficultySelects[0]!.value as Difficulty, missionMode: missionSelect.value as MissionMode });
+        difficulty: difficultySelects[0]!.value as Difficulty, missionMode: missionSelect.value as MissionMode,
+        spawnMode: spawnSelect.value as SpawnMode });
     });
   }
 
@@ -228,7 +239,7 @@ export class Interface {
     if (gamepad && padLabels && state.portal.ready && this.root.querySelector('#combat-message')!.textContent?.startsWith('PORTAL LISTO')) {
       this.root.querySelector('#combat-message')!.textContent = `PORTAL LISTO · ${padLabels[3]![0]} cerca del anillo para saltar`;
     }
-    if (state.enabled) this.root.querySelector('.mission-status')!.textContent = `OLEADA ${String(state.wave).padStart(2, '0')} · ${DIFFICULTIES[difficulty].label.toUpperCase()} ${DIFFICULTIES[difficulty].speed}× · ${state.lives} NAVES`;
+    if (state.enabled) this.root.querySelector('.mission-status')!.textContent = `${state.spawnMode === 'dynamic' ? 'ZONAS' : 'CLÁSICO'} · OLEADA ${String(state.wave).padStart(2, '0')} · ${DIFFICULTIES[difficulty].label.toUpperCase()} ${DIFFICULTIES[difficulty].speed}× · ${state.lives} NAVES`;
     this.backend.textContent = metrics.backend.toUpperCase();
     if (!this.hud.hidden) this.radar.draw(state, metrics.cameraX, metrics.viewWidth);
     if (this.debugVisible) this.root.querySelector('#metrics')!.textContent = [
@@ -246,9 +257,13 @@ export class Interface {
   private combatHud(state: FlightState, metrics: RenderMetrics, gamepad: boolean): void {
     const get = (selector: string) => this.root.querySelector<HTMLElement>(selector)!;
     get('.mission p').textContent = state.enabled ? state.missionMode === 'rescue' ? 'EVACUACIÓN DE LA COLONIA' : 'DEFENSA DE LA COLONIA' : 'RECONOCIMIENTO ORBITAL';
-    get('.mission div>span').textContent = state.enabled ? state.missionMode === 'rescue'
-      ? 'Extrae colonos · transpórtalos a Fortaleza 01'
-      : 'Interrumpe las capturas · atrapa y entrega colonos' : 'Prueba de vuelo · explora el perímetro circular';
+    get('.mission div>span').textContent = !state.enabled ? 'Prueba de vuelo · explora el perímetro circular'
+      : state.spawnMode === 'classic'
+        ? (state.missionMode === 'rescue' ? 'Extrae colonos · transpórtalos a Fortaleza 01'
+          : 'Interrumpe las capturas · atrapa y entrega colonos')
+        : state.missionMode === 'rescue'
+          ? 'Amenazas recurrentes · entrega colonos hasta resolver su destino'
+          : 'Amenazas recurrentes · resiste y protege a la colonia';
     get('.mission-status').textContent = state.enabled ? 'OLEADA 01' : 'VUELO LIBRE';
     get('.mission-index').textContent = String(state.wave).padStart(2, '0');
     if (!state.enabled) { get('#world-labels').innerHTML = ''; return; }
@@ -256,7 +271,14 @@ export class Interface {
     const carrying = state.colonists.filter(c => c.status === 'carried').length;
     const extracting = state.colonists.some(c => c.status === 'extracting');
     const lifeSlots = Math.max(state.lives, DIFFICULTIES[state.difficulty].lifeCap);
-    get('#combat-stats').innerHTML = `<span>PUNTOS <b>${String(state.score).padStart(6, '0')}</b></span><span>NAVES <b>${'◆'.repeat(state.lives)}${'◇'.repeat(lifeSlots - state.lives)}</b></span><span>BOMBAS <b>${state.bombs}</b></span><span>COLONOS <b>${live}/8</b></span><span>A SALVO <b>${state.delivered}</b></span><span>AMENAZAS <b>${state.enemies.length + state.schedule.length - state.spawnIndex}</b></span>`;
+    const dynamic = state.spawnMode === 'dynamic';
+    const goal = defenseGoal(state.wave, state.difficulty, state.colonists.length);
+    const remaining = Math.max(0, Math.ceil(goal.seconds - (state.time - state.waveStartedAt)));
+    const objective = dynamic ? state.missionMode === 'defense'
+      ? `<span>RESISTIR <b>${remaining}s</b></span><span>MÍNIMO <b>${goal.minimum}</b></span>`
+      : `<span>POR RESOLVER <b>${state.colonists.filter(c => c.status !== 'safe' && c.status !== 'lost').length}</b></span>`
+      : '';
+    get('#combat-stats').innerHTML = `<span>PUNTOS <b>${String(state.score).padStart(6, '0')}</b></span><span>NAVES <b>${'◆'.repeat(state.lives)}${'◇'.repeat(lifeSlots - state.lives)}</b></span><span>BOMBAS <b>${state.bombs}</b></span><span>COLONOS <b>${live}/${state.colonists.length}</b></span><span>A SALVO <b>${state.delivered}</b></span><span>AMENAZAS <b>${state.enemies.length + (dynamic ? 0 : state.schedule.length - state.spawnIndex)}</b></span>${objective}`;
     const event = [...state.events].reverse().find(e => !['spawn', 'impact', 'explosion'].includes(e.kind) && state.time - e.time < 3);
     const messages: Partial<Record<GameEvent['kind'], string>> = {
       capture: '¡CAPTURA DETECTADA! Intercepta al abductor', extraction: 'EXTRACCIÓN INICIADA · Mantén la nave cerca', falling: 'COLONO EN CAÍDA · Atrápalo antes de llegar al suelo',
@@ -274,7 +296,8 @@ export class Interface {
       : state.missionMode === 'rescue' && state.colonists.some(c => c.status === 'ground')
         ? `MODO RESCATISTA · ${gamepad ? 'NORTE Y/△' : 'E'} sobre un colono para extraerlo`
       : state.portal.ready ? `PORTAL LISTO · ${gamepad ? 'NORTE Y/△' : 'E'} cerca del anillo para saltar`
-      : 'PROTEGE A LOS COLONOS · Usa el radar para localizar capturas';
+      : dynamic && state.missionMode === 'defense' ? `DEFENSA POR ZONAS · ${remaining}s · ${live}/${goal.minimum} supervivientes`
+         : 'PROTEGE A LOS COLONOS · Usa el radar para localizar capturas';
     if (get('#combat-message').textContent !== message) get('#combat-message').textContent = message;
     const labels = state.colonists.filter(c => c.status !== 'lost' && Math.abs(signedWrappedDeltaX(metrics.cameraX, c.x, CONFIG.worldWidth)) < metrics.viewWidth / 2 - 3)
       .map(c => {
@@ -293,10 +316,11 @@ export class Interface {
       get('#result-title').textContent = state.outcome === 'victory' ? 'Oleada completada.' : 'Misión terminada.';
       get('#result-wave').textContent = `OPERACIÓN / OLEADA ${state.wave}`;
       get('#result-note').textContent = state.outcome === 'victory'
-        ? `Siguiente: ${state.wave + 1}. Ocho colonos nuevos · +1 bomba (máx. 3)${state.wave % 3 === 0 ? ' · +1 nave (máx. 3)' : ''}. Conservas tus puntos y naves.`
-        : 'No quedan naves de reserva. Puedes volver a intentarlo.';
+        ? `Siguiente: ${state.wave + 1}. ${state.colonists.length} colonos nuevos · +1 bomba (según dificultad)${state.wave % 3 === 0 ? ' · +1 nave' : ''}. Conservas tus puntos y naves.`
+        : state.spawnMode === 'dynamic' ? 'No se cumplió el objetivo de supervivencia o rescate. Puedes volver a intentarlo.'
+          : 'No quedan naves de reserva. Puedes volver a intentarlo.';
       get('[data-action="result"]').innerHTML = state.outcome === 'victory' ? 'SIGUIENTE OLEADA <span>↗</span>' : 'VOLVER A JUGAR <span>↗</span>';
-      get('#result-stats').innerHTML = `<div>Colonos supervivientes <b>${state.summary.survivors}/8</b></div><div>Entregados a salvo <b>${state.summary.rescued}</b></div><div>Bajas <b>${state.summary.lost}</b></div><div>Tiempo <b>${state.summary.time.toFixed(1)} s</b></div><div>Bonificación <b>+${state.summary.bonus}</b></div><div>Puntuación total <b>${state.summary.score}</b></div>`;
+      get('#result-stats').innerHTML = `<div>Colonos supervivientes <b>${state.summary.survivors}/${state.colonists.length}</b></div><div>Entregados a salvo <b>${state.summary.rescued}</b></div><div>Bajas <b>${state.summary.lost}</b></div><div>Tiempo <b>${state.summary.time.toFixed(1)} s</b></div><div>Bonificación <b>+${state.summary.bonus}</b></div><div>Puntuación total <b>${state.summary.score}</b></div>`;
     }
   }
 }

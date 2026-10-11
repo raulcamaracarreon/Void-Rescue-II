@@ -19,9 +19,9 @@ Conservar el motor jugable de Void Rescue I: TypeScript, Vite, Three.js (WebGPU 
 
 **Archivos existentes de referencia:** `src/render/WorldScene.ts`, `src/render/Renderer.ts`, `src/render/materials.ts`, `src/game/Terrain.ts`, `src/ui/Interface.ts`, `src/app/GameApp.ts`. Crear módulos nuevos de configuración, generación y dibujo sin incorporar dependencias PySide6/Qt.
 
-## Objetivo 2 — Amenazas dinámicas y condiciones de victoria
+## Objetivo 2 — Dos sistemas opcionales de aparición y condiciones de victoria
 
-- Sustituir en juego normal el calendario finito de apariciones por un planificador por zona/tiempo, también activo al regresar o permanecer en una zona.
+- **Conservar el modo Clásico original** con apariciones programadas y reglas previas. Ofrecer **Dinámico por zonas** como elección separada de la misión Rescatista/Defensivo; el director de amenazas opera tanto al explorar como al permanecer en una zona.
 - Cada aparición deberá respetar distancia mínima a la nave y límites de enemigos simultáneos, ajustados por dificultad y oleada.
 - **Rescatista:** la victoria ocurre cuando todos los colonos tienen estado terminal `safe` o `lost` y existe al menos un `safe`. Los colonos en `ground`, `targeted`, `captured`, `falling`, `extracting` o `carried` siguen pendientes. Si todos están `lost`, misión fallida.
 - **Defensivo:** resistir un tiempo establecido, con un mínimo de colonos supervivientes al agotarse el reloj. Si ya no es posible alcanzar ese mínimo, fracaso anticipado. Ajustar balance tras pruebas; evitar elegir valores arbitrarios definitivos.
@@ -77,3 +77,17 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - Selección de ambientes (automático por oleada o preset fijo) separada de modalidad de edición; personalización y validación persistidas.
 - Compatibilidad: preferencias v1 personalizadas se conservan y migran como modo Avanzado.
 - La nueva interfaz sólo presenta dos controles de color en modo Automático (más parámetros no cromáticos para capas, composición, semillas y estrellas).
+
+## Arquitectura de modalidades (implementación en revisión, 11-10-2026)
+
+- [x] Selector de sistema de enemigos (Clásico, Dinámico) en menú; selección separada de Rescatista/Defensivo y persistente. Clásico por defecto para usuarios existentes.
+- [x] Escenarios clásicos y pruebas de regresión conservan calendario `waveSchedule` y victoria finita previa.
+- [x] Director dinámico por 12 sectores de 200 unidades, generación a 82–170 unidades del jugador, límites globales/locales y cooldown por sector; se reciclan enemigos inactivos lejanos, no secuestradores con víctimas.
+- [x] Flux respeta el límite global incluso al generar drones.
+- [x] Objetivos de Rescatista en dinámico: todos los colonos `safe` o `lost`, al menos un `safe`; todos `lost` => derrota.
+- [x] Objetivos de Defensivo en dinámico: reloj inicial 120 s (máximo 180) y umbral inicial 4/8 en Normal. Las capturas no consumadas siguen contando como colonos vivos; derrota anticipada al bajar del umbral.
+- [x] Récords locales separados por sistema y misión, migrando los antiguos a Clásico sin borrarlos.
+- [x] HUD monocromático ligeramente reducido y objetivos de tiempo/colonos visibles solo en modo Dinámico.
+- [ ] Pruebas automáticas completas, evaluación perceptiva, dificultad y balance en máquina real.
+
+**Importante:** los enemigos continúan apareciendo *durante la oleada*. Una oleada termina por el objetivo de la misión, no por la cantidad de enemigos; sigue habiendo un número finito de colonos y, en Defensivo, un reloj finito.

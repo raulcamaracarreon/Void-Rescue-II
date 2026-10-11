@@ -4,6 +4,13 @@ import { COMBAT } from './types';
 import type { CombatContext, EnemyKind, SpawnEntry } from './types';
 import { difficultyProfile } from '../Difficulty';
 import type { Difficulty } from '../Difficulty';
+import { initializeDirector } from './DynamicDirector';
+
+/** Hard caps prevent infinite spawning from becoming an unbounded simulation. */
+export function activeEnemyCap(wave: number, difficulty: string): number {
+  const profile = difficultyProfile(difficulty);
+  return Math.max(5, Math.min(18, Math.round((8 + Math.min(5, Math.max(0, wave - 1))) * profile.enemyCount)));
+}
 
 // Pressure keeps increasing, approaching 1.8×; bounded populations protect long runs.
 export function wavePressure(wave: number): number {
@@ -60,6 +67,8 @@ export function advanceWave(ctx: CombatContext): boolean {
   Object.assign(s.player, { x: CONFIG.startX, previousX: CONFIG.startX, y: CONFIG.startY,
     previousY: CONFIG.startY, vx: 0, vy: 0, facing: 1, thrust: 0, alive: true, invulnerable: COMBAT.invulnerability });
   populateColonists(ctx);
-  s.schedule = waveSchedule(s.wave, s.seed, s.difficulty); s.spawnIndex = 0;
+  s.schedule = s.spawnMode === 'dynamic' ? [] : waveSchedule(s.wave, s.seed, s.difficulty);
+  s.spawnIndex = 0;
+  s.director = s.spawnMode === 'dynamic' ? initializeDirector() : null;
   return true;
 }

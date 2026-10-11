@@ -2,9 +2,11 @@ import { DIFFICULTIES } from './Difficulty';
 import type { Difficulty } from './Difficulty';
 import { MISSION_MODES } from './MissionMode';
 import type { MissionMode } from './MissionMode';
+import { SPAWN_MODES } from './SpawnMode';
+import type { SpawnMode } from './SpawnMode';
 
 export interface PlayerRecord {
-  id: string; pilot: string; score: number; wave: number; difficulty: Difficulty; missionMode?: MissionMode; date: string;
+  id: string; pilot: string; score: number; wave: number; difficulty: Difficulty; missionMode?: MissionMode; spawnMode?: SpawnMode; date: string;
 }
 export const RECORDS_KEY = 'void-rescue-ii.records.v1';
 export const PILOT_KEY = 'void-rescue.pilot';
@@ -22,6 +24,7 @@ function valid(value: unknown): value is PlayerRecord {
     && Number.isSafeInteger(r.wave) && Number(r.wave) >= 1
     && typeof r.difficulty === 'string' && Object.hasOwn(DIFFICULTIES, r.difficulty)
     && (r.missionMode === undefined || (typeof r.missionMode === 'string' && Object.hasOwn(MISSION_MODES, r.missionMode)))
+    && (r.spawnMode === undefined || (typeof r.spawnMode === 'string' && Object.hasOwn(SPAWN_MODES, r.spawnMode)))
     && typeof r.date === 'string' && r.date.length <= 30 && Number.isFinite(Date.parse(r.date));
 }
 
@@ -41,7 +44,11 @@ export class Records {
     } catch { this.persistent = false; }
   }
 
-  list(): PlayerRecord[] { this.refresh(); return this.entries.map(r => ({ ...r })); }
+  list(spawning?: SpawnMode, mission?: MissionMode): PlayerRecord[] {
+    this.refresh();
+    return this.entries.filter(r => (!spawning || (r.spawnMode ?? 'classic') === spawning)
+      && (!mission || (r.missionMode ?? 'defense') === mission)).map(r => ({ ...r }));
+  }
 
   setPilot(value: string): void {
     this.pilot = pilotName(value);
@@ -60,7 +67,16 @@ export class Records {
 
   private sort(): void {
     this.entries.sort((a, b) => b.score - a.score || b.wave - a.wave || a.date.localeCompare(b.date));
-    this.entries = this.entries.filter((r, index, all) => all.findIndex(other => other.id === r.id) === index).slice(0, 10);
+    const seen = new Set<string>(), count = new Map<string, number>();
+    this.entries = this.entries.filter(r => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      const group = `${r.spawnMode ?? 'classic'}:${r.missionMode ?? 'defense'}`;
+      const size = count.get(group) ?? 0;
+      if (size >= 10) return false;
+      count.set(group, size + 1);
+      return true;
+    });
   }
 
   private refresh(): void {

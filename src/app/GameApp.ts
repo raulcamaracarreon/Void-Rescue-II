@@ -15,20 +15,23 @@ import type { PlayerRecord } from '../game/Records';
 import { RecordsPanel } from '../ui/RecordsPanel';
 import { wavePressure } from '../game/combat/Progression';
 import { missionMode } from '../game/MissionMode';
+import { spawnMode } from '../game/SpawnMode';
 import { LandscapePanel } from '../ui/LandscapePanel';
 import { defaultLandscapePreferences, resolveLandscape, sanitizeLandscapePreferences } from '../landscape/LandscapeConfig';
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 
 const LANDSCAPE_SETTINGS_KEY = 'void-rescue-ii.landscape.v1';
+const GAME_SETTINGS_KEY = 'void-rescue-ii.preferences.v1';
+const LEGACY_SETTINGS_KEY = 'void-rescue.preferences';
 function readLandscapePreferences(): LandscapePreferences {
   try { return sanitizeLandscapePreferences(JSON.parse(localStorage.getItem(LANDSCAPE_SETTINGS_KEY) ?? 'null')); }
   catch { return defaultLandscapePreferences(); }
 }
 
 function readPreferences(): Preferences {
-  const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense' };
+  const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense', spawnMode: 'classic' };
   try {
-    const data: unknown = JSON.parse(localStorage.getItem('void-rescue.preferences') ?? '{}');
+    const data: unknown = JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY) ?? localStorage.getItem(LEGACY_SETTINGS_KEY) ?? '{}');
     if (typeof data !== 'object' || !data) return defaults;
     const value = data as Record<string, unknown>;
     return {
@@ -37,6 +40,7 @@ function readPreferences(): Preferences {
       volume: typeof value.volume === 'number' && Number.isFinite(value.volume) ? Math.max(0, Math.min(1, value.volume)) : defaults.volume,
       difficulty: difficulty(value.difficulty),
       missionMode: missionMode(value.missionMode),
+      spawnMode: spawnMode(value.spawnMode),
     };
   } catch { return defaults; }
 }
@@ -52,7 +56,7 @@ export class GameApp {
   private readonly landscapePanel: LandscapePanel;
   private readonly records = new Records();
   private readonly recordsPanel: RecordsPanel;
-  private run: Pick<PlayerRecord, 'id' | 'pilot' | 'difficulty' | 'missionMode' | 'date'> | null = null;
+  private run: Pick<PlayerRecord, 'id' | 'pilot' | 'difficulty' | 'missionMode' | 'spawnMode' | 'date'> | null = null;
   private mode: AppMode = 'title';
   private preferences = readPreferences();
   private landscapePreferences = readLandscapePreferences();
@@ -84,7 +88,8 @@ export class GameApp {
     this.controllerPanel = new ControllerPanel(root, this.input.controller, () => { this.input.clear(); });
     this.landscapePanel = new LandscapePanel(root, this.landscapePreferences,
       value => this.saveLandscape(value), () => this.simulation.state.wave);
-    this.recordsPanel = new RecordsPanel(root, this.records, () => { this.input.clear(); });
+    this.recordsPanel = new RecordsPanel(root, this.records, () => { this.input.clear(); },
+      () => ({ spawnMode: this.preferences.spawnMode, missionMode: this.preferences.missionMode }));
     this.audio.setMuted(this.preferences.muted);
     this.audio.setVolume(this.preferences.volume);
     window.addEventListener('blur', this.onBlur);
@@ -142,7 +147,7 @@ export class GameApp {
     if (teleport) { this.lastTeleport = teleport.id; this.graphics.reset(state, false); }
     if (state.enabled && state.outcome !== 'active' && this.mode === 'playing') {
       this.saveRecord();
-      const rank = this.run ? this.records.list().findIndex(record => record.id === this.run!.id) + 1 : 0;
+      const rank = this.run ? this.records.list(this.run?.spawnMode, this.run?.missionMode).findIndex(record => record.id === this.run!.id) + 1 : 0;
       this.ui.recordStatus(this.run && state.score === 0 ? 'Sin puntos registrados. ¡Inténtalo otra vez!' : this.run
         ? `${this.run.pilot} · ${rank ? `Puesto ${rank}/10 · ${this.records.persistent ? 'Guardado' : 'Solo esta sesión'}` : 'Fuera del top 10'} · ${DIFFICULTIES[this.run.difficulty].label} (mínima usada)`
         : 'Práctica de diagnóstico · no registra récords');
@@ -176,9 +181,12 @@ export class GameApp {
 
   start(): void {
     this.saveRecord();
-    this.run = { id: crypto.randomUUID(), pilot: this.records.pilot, difficulty: this.preferences.difficulty, missionMode: this.preferences.missionMode, date: new Date().toISOString() };
+    this.run = { id: crypto.randomUUID(), pilot: this.records.pilot, difficulty: this.preferences.difficulty,
+      missionMode: this.preferences.missionMode, spawnMode: this.preferences.spawnMode, date: new Date().toISOString() };
     this.unlockAudio();
-    this.simulation = new Simulation(this.simulation.state.seed, 'combat-basic', this.preferences.difficulty, this.preferences.missionMode);
+    this.simulation = new Simulation(this.simulation.state.seed,
+      this.preferences.spawnMode === 'dynamic' ? 'dynamic-basic' : 'combat-basic',
+      this.preferences.difficulty, this.preferences.missionMode, this.preferences.spawnMode);
     this.audio.resetEvents(); this.lastTeleport = 0;
     this.graphics.reset(this.simulation.state, false);
     this.setMode('playing');
@@ -186,7 +194,7 @@ export class GameApp {
 
   restart(): void {
     if (this.simulation.state.enabled) { this.start(); return; }
-    this.simulation = new Simulation(this.simulation.state.seed, this.simulation.state.enabled ? 'combat-basic' : 'flight-basic', this.preferences.difficulty, this.preferences.missionMode);
+    this.simulation = new Simulation(this.simulation.state.seed, this.simulation.state.enabled ? (this.preferences.spawnMode === 'dynamic' ? 'dynamic-basic' : 'combat-basic') : 'flight-basic', this.preferences.difficulty, this.preferences.missionMode);
     this.audio.resetEvents(); this.lastTeleport = 0;
     this.graphics.reset(this.simulation.state, false);
     this.setMode('playing');
@@ -232,10 +240,11 @@ export class GameApp {
     this.preferences = preferences;
     this.simulation.setDifficulty(preferences.difficulty);
     this.simulation.setMissionMode(preferences.missionMode);
+    // Spawn type belongs to the run and can only be chosen on the title screen.
     this.audio.setMuted(preferences.muted);
     this.audio.setVolume(preferences.volume);
     this.ui.syncMuted(preferences.muted);
-    try { localStorage.setItem('void-rescue.preferences', JSON.stringify(preferences)); } catch { /* Session settings still work without storage. */ }
+    try { localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(preferences)); } catch { /* Session settings still work without storage. */ }
   }
 
   private async fullscreen(): Promise<void> {
@@ -293,7 +302,8 @@ export class GameApp {
           colonists: this.simulation.state.colonists.filter(c => c.status !== 'lost').length, projectiles: this.simulation.state.shots.length,
           particles: this.graphics.combat.particleCount },
         wave: { number: this.simulation.state.wave, pressure: wavePressure(this.simulation.state.wave), ranked: Boolean(this.run), outcome: this.simulation.state.outcome, score: this.simulation.state.score, delivered: this.simulation.state.delivered,
-          remainingSpawns: this.simulation.state.schedule.length - this.simulation.state.spawnIndex },
+          remainingSpawns: this.simulation.state.spawnMode === 'dynamic' ? null : this.simulation.state.schedule.length - this.simulation.state.spawnIndex,
+          spawnMode: this.simulation.state.spawnMode, dynamicSpawned: this.simulation.state.director?.spawned ?? 0 },
         difficulty: this.preferences.difficulty, speed: DIFFICULTIES[this.preferences.difficulty].speed,
         difficultyProfile: { ...DIFFICULTIES[this.preferences.difficulty] },
         controller: this.input.controller.snapshot(), droppedSeconds: this.clock.droppedSeconds, audioError: this.audioError }),

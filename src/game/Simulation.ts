@@ -13,6 +13,8 @@ import { advanceWave } from './combat/Progression';
 import { difficulty, difficultyProfile } from './Difficulty';
 import type { Difficulty } from './Difficulty';
 import { missionMode } from './MissionMode';
+import { spawnMode } from './SpawnMode';
+import type { SpawnMode } from './SpawnMode';
 import type { MissionMode } from './MissionMode';
 import { startPlayerExtraction } from './combat/ColonistSystem';
 export { SCENARIOS } from './combat/scenarios';
@@ -40,7 +42,7 @@ export class Simulation {
   private portalHeld = false;
   readonly context: CombatContext;
 
-  constructor(seed = Number(CONFIG.defaultSeed), scenario: ScenarioName = 'flight-basic', selectedDifficulty: Difficulty = 'normal', selectedMissionMode: MissionMode = 'defense') {
+  constructor(seed = Number(CONFIG.defaultSeed), scenario: ScenarioName = 'flight-basic', selectedDifficulty: Difficulty = 'normal', selectedMissionMode: MissionMode = 'defense', selectedSpawnMode: SpawnMode = 'classic') {
     const selected = difficulty(selectedDifficulty);
     const selectedMode = missionMode(selectedMissionMode);
     const profile = difficultyProfile(selected);
@@ -48,7 +50,7 @@ export class Simulation {
     this.state = {
       ...emptyCombat(scenario !== 'flight-basic' && scenario !== 'world-seam', profile),
       seed: seed >>> 0, frame: 0, time: 0, distance: 0, laps: 0, scenario,
-      difficulty: selected, missionMode: selectedMode,
+      difficulty: selected, missionMode: selectedMode, spawnMode: scenario === 'dynamic-basic' ? 'dynamic' : spawnMode(selectedSpawnMode),
       player: { x, y: CONFIG.startY, previousX: x, previousY: CONFIG.startY, vx: 0, vy: 0, facing: 1, thrust: 0, alive: true, invulnerable: 3 },
       shots: [], shotsFired: 0,
     };
@@ -58,6 +60,8 @@ export class Simulation {
         if (this.state.events.length > 80) this.state.events.shift();
       } };
     initializeScenario(this.context, scenario);
+    // Diagnostic scenarios intentionally keep their finite scripts.
+    if (scenario !== 'dynamic-basic') { this.state.spawnMode = 'classic'; this.state.director = null; }
   }
 
   update(dt: number, input: FlightInput): void {
