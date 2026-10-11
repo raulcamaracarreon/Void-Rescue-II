@@ -5,6 +5,7 @@ import {
   resolveLandscape, sanitizeLandscapePreferences,
 } from '../../src/landscape/LandscapeConfig';
 import { landscapeSilhouette, parallaxFactor, parallaxOffset } from '../../src/landscape/LandscapeMath';
+import { ParallaxLandscape } from '../../src/render/ParallaxLandscape';
 
 describe('paisajes procedurales', () => {
   it('alterna ambientes por oleada sin cambiar la paleta configurada', () => {
@@ -59,6 +60,18 @@ describe('paisajes procedurales', () => {
       expect(points.at(-1)!.y).toBeCloseTo(points[0]!.y, 12);
       expect(points.every(point => Number.isFinite(point.y))).toBe(true);
     }
+  });
+
+  it('detiene el desplazamiento de fondo con la opción de reducir movimiento', () => {
+    const visual = new ParallaxLandscape();
+    visual.rebuild(LANDSCAPE_PRESETS.city.style, 8042, 1);
+    visual.update(1600, true);
+    const fixed = visual.group.children.map(group => group.children[1]!.position.x);
+    expect(fixed.every(x => x === 0)).toBe(true);
+    visual.update(1600, false);
+    const moving = visual.group.children.map(group => group.children[1]!.position.x);
+    expect(moving.every(x => x < 0)).toBe(true);
+    visual.dispose();
   });
 
   it('mantiene movimiento relativo suave con cámara continua incluso al cruzar 2400', () => {
