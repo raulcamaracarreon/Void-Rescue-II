@@ -1,6 +1,6 @@
 # Void Rescue II — hoja de ruta inicial
 
-**Estado:** objetivo 1 implementado y en revisión; objetivo 2 pendiente. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
+**Estado:** objetivos 1 y 2 integrados en `main` (PR #3, #4 y #10); balance visual y jugable pendiente. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
 
 ## Principio de diseño
 
@@ -78,7 +78,7 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - Compatibilidad: preferencias v1 personalizadas se conservan y migran como modo Avanzado.
 - La nueva interfaz sólo presenta dos controles de color en modo Automático (más parámetros no cromáticos para capas, composición, semillas y estrellas).
 
-## Arquitectura de modalidades (implementación en revisión, 11-10-2026)
+## Arquitectura de modalidades (incorporada a `main` mediante PR #10, 11-10-2026)
 
 - [x] Selector de sistema de enemigos (Clásico, Dinámico) en menú; selección separada de Rescatista/Defensivo y persistente. Clásico por defecto para usuarios existentes.
 - [x] Escenarios clásicos y pruebas de regresión conservan calendario `waveSchedule` y victoria finita previa.
@@ -88,6 +88,7 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - [x] Objetivos de Defensivo en dinámico: reloj inicial 120 s (máximo 180) y umbral inicial 4/8 en Normal. Las capturas no consumadas siguen contando como colonos vivos; derrota anticipada al bajar del umbral.
 - [x] Récords locales separados por sistema y misión, migrando los antiguos a Clásico sin borrarlos.
 - [x] HUD monocromático ligeramente reducido y objetivos de tiempo/colonos visibles solo en modo Dinámico.
-- [ ] Pruebas automáticas completas, evaluación perceptiva, dificultad y balance en máquina real.
+- [x] 91 pruebas unitarias, TypeScript, build y 16 recorridos de navegador (paisajes y selección de modalidad) aprobados en ambos backends.
+- [ ] Prueba de regresión integral de todos los flujos E2E y balance/dificultad en equipo real.
 
 **Importante:** los enemigos continúan apareciendo *durante la oleada*. Una oleada termina por el objetivo de la misión, no por la cantidad de enemigos; sigue habiendo un número finito de colonos y, en Defensivo, un reloj finito.
