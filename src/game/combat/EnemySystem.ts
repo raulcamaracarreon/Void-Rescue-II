@@ -4,7 +4,7 @@ import { COMBAT } from './types';
 import type { CombatContext, Enemy, EnemyKind } from './types';
 import { deltaX, distance } from './spatial';
 import { releaseTarget } from './ColonistSystem';
-import { wavePressure } from './Progression';
+import { activeEnemyCap, wavePressure } from './Progression';
 import { difficultyProfile } from '../Difficulty';
 
 export function spawnEnemy(ctx: CombatContext, kind: EnemyKind, x: number, y: number, telegraph = 0.65): Enemy {
@@ -87,7 +87,8 @@ export function updateEnemies(ctx: CombatContext, dt: number): void {
       e.cooldown -= realDt * pressure;
       if (e.cooldown <= 0 && p.alive) {
         e.cooldown = (e.kind === 'flux' ? 5 : e.kind === 'crossfire' ? 2.1 + ctx.random.next() * 0.6 : 2.8 + ctx.random.next()) / profile.enemyFireRate;
-        if (e.kind === 'flux' && s.enemies.filter(e => e.kind === 'drone').length < 3) {
+        if (e.kind === 'flux' && s.enemies.filter(e => e.kind === 'drone').length < 3
+          && (s.spawnMode === 'classic' || s.enemies.length < activeEnemyCap(s.wave, s.difficulty))) {
           spawnEnemy(ctx, 'drone', e.x, e.y - 4, 0.4);
         } else if (e.kind === 'crossfire' && distance(e, p) < 135) {
           // This enemy's hull is horizontal; its paired shots travel along the
