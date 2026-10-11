@@ -15,6 +15,15 @@ import type { PlayerRecord } from '../game/Records';
 import { RecordsPanel } from '../ui/RecordsPanel';
 import { wavePressure } from '../game/combat/Progression';
 import { missionMode } from '../game/MissionMode';
+import { LandscapePanel } from '../ui/LandscapePanel';
+import { defaultLandscapePreferences, resolveLandscape, sanitizeLandscapePreferences } from '../landscape/LandscapeConfig';
+import type { LandscapePreferences } from '../landscape/LandscapeConfig';
+
+const LANDSCAPE_SETTINGS_KEY = 'void-rescue.landscape.v1';
+function readLandscapePreferences(): LandscapePreferences {
+  try { return sanitizeLandscapePreferences(JSON.parse(localStorage.getItem(LANDSCAPE_SETTINGS_KEY) ?? 'null')); }
+  catch { return defaultLandscapePreferences(); }
+}
 
 function readPreferences(): Preferences {
   const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense' };
@@ -40,11 +49,13 @@ export class GameApp {
   private readonly graphics: FlightRenderer;
   private readonly ui: Interface;
   private readonly controllerPanel: ControllerPanel;
+  private readonly landscapePanel: LandscapePanel;
   private readonly records = new Records();
   private readonly recordsPanel: RecordsPanel;
   private run: Pick<PlayerRecord, 'id' | 'pilot' | 'difficulty' | 'missionMode' | 'date'> | null = null;
   private mode: AppMode = 'title';
   private preferences = readPreferences();
+  private landscapePreferences = readLandscapePreferences();
   private previousTime = 0;
   private raf = 0;
   private disposed = false;
@@ -57,18 +68,21 @@ export class GameApp {
     const rawSeed = Number(params.get('seed') ?? CONFIG.defaultSeed);
     const seed = Number.isFinite(rawSeed) ? rawSeed >>> 0 : CONFIG.defaultSeed;
     this.simulation = new Simulation(seed, 'flight-basic', this.preferences.difficulty, this.preferences.missionMode);
-    this.graphics = new FlightRenderer(canvas, seed, params.get('backend') === 'webgl2');
+    this.graphics = new FlightRenderer(canvas, seed, params.get('backend') === 'webgl2', this.landscapePreferences);
     this.graphics.renderer.onError = message => this.showError(new Error(message));
     this.graphics.renderer.onDeviceLost = info => this.showError(new Error(`Se perdió el dispositivo gráfico: ${info.message}`));
     this.ui = new Interface(root, {
       start: () => this.start(), resume: () => this.setPaused(false), restart: () => this.restart(),
       menu: () => this.menu(), pause: () => this.setPaused(true), mute: () => this.toggleMute(),
       fullscreen: () => { void this.fullscreen(); }, preferences: value => this.savePreferences(value),
+      landscape: () => this.openLandscape(),
       controller: () => { this.setPaused(true); this.controllerPanel.show(); },
       result: () => this.continueResult(), pilot: value => this.records.setPilot(value),
       records: () => { this.setPaused(true); this.saveRecord(); this.recordsPanel.show(); },
     }, this.preferences, this.records.pilot);
     this.controllerPanel = new ControllerPanel(root, this.input.controller, () => { this.input.clear(); });
+    this.landscapePanel = new LandscapePanel(root, this.landscapePreferences,
+      value => this.saveLandscape(value), () => this.simulation.state.wave);
     this.recordsPanel = new RecordsPanel(root, this.records, () => { this.input.clear(); });
     this.audio.setMuted(this.preferences.muted);
     this.audio.setVolume(this.preferences.volume);
@@ -96,7 +110,10 @@ export class GameApp {
     this.controllerPanel.update();
     if (this.input.disconnected && this.mode === 'playing') { this.setPaused(true); this.ui.disconnected(); }
     const menuInput = this.input.menu();
-    if (this.recordsPanel.open) {
+    if (this.landscapePanel.open) {
+      this.input.consume('pause');
+      this.landscapePanel.navigatePad(menuInput);
+    } else if (this.recordsPanel.open) {
       if (this.input.consume('pause')) this.recordsPanel.close(); else this.recordsPanel.navigate(menuInput);
     } else if (this.controllerPanel.open) {
       this.input.consume('pause'); this.controllerPanel.navigate(menuInput);
@@ -193,6 +210,18 @@ export class GameApp {
     if (!this.preferences.muted && this.mode !== 'title') this.unlockAudio();
   }
 
+  private openLandscape(): void {
+    if (this.mode === 'playing') this.setPaused(true);
+    this.landscapePanel.show();
+  }
+
+  private saveLandscape(preferences: LandscapePreferences): void {
+    this.landscapePreferences = sanitizeLandscapePreferences(preferences);
+    this.graphics.setLandscape(this.landscapePreferences, this.simulation.state.wave);
+    try { localStorage.setItem(LANDSCAPE_SETTINGS_KEY, JSON.stringify(this.landscapePreferences)); }
+    catch { /* Visual settings remain usable for the current session. */ }
+  }
+
   private savePreferences(preferences: Preferences): void {
     if (this.run && DIFFICULTIES[preferences.difficulty].rank < DIFFICULTIES[this.run.difficulty].rank) {
       this.run.difficulty = preferences.difficulty;
@@ -233,6 +262,7 @@ export class GameApp {
   private diagnostics() {
     return Object.freeze({
       getState: () => ({ ...this.simulation.snapshot(), mode: this.mode, preferences: { ...this.preferences },
+        landscape: sanitizeLandscapePreferences(this.landscapePreferences),
         camera: { x: this.graphics.rig.x, viewWidth: this.graphics.viewWidth,
           radarSegments: radarSegments(this.graphics.rig.x, this.graphics.viewWidth, CONFIG.worldWidth) },
         audio: this.audio.getState() }),
@@ -253,6 +283,7 @@ export class GameApp {
         for (let i = 0; i < frames; i++) this.simulation.update(this.clock.dt, IDLE_INPUT);
       },
       getMetrics: () => ({ ...this.graphics.metrics(), seed: this.simulation.state.seed,
+        landscape: resolveLandscape(this.landscapePreferences, this.simulation.state.wave).name,
         scenario: this.simulation.state.scenario, simulationHz: 60, frame: this.simulation.state.frame,
         entities: { player: Number(this.simulation.state.player.alive), enemies: this.simulation.state.enemies.length,
           colonists: this.simulation.state.colonists.filter(c => c.status !== 'lost').length, projectiles: this.simulation.state.shots.length,
