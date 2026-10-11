@@ -49,10 +49,10 @@ export class ParallaxLandscape {
     });
   }
 
-  update(cameraX: number): void {
+  update(cameraX: number, reducedMotion = false): void {
     const count = this.layerGroups.length;
     this.layerGroups.forEach((container, i) => {
-      const offset = parallaxOffset(cameraX, parallaxFactor(i, count), CONFIG.worldWidth);
+      const offset = reducedMotion ? 0 : parallaxOffset(cameraX, parallaxFactor(i, count), CONFIG.worldWidth);
       container.children.forEach((mesh, tile) => { mesh.position.x = (tile - 1) * CONFIG.worldWidth - offset; });
     });
   }
