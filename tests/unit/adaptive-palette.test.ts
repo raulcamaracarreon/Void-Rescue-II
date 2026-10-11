@@ -36,9 +36,9 @@ describe('contraste adaptativo HUD y láser', () => {
     'conserva al menos AA 4.5:1 para un cielo personalizado %s', color => {
       const sky = copyLandscape(LANDSCAPE_PRESETS.night.style);
       sky.skyTop = color; sky.skyBottom = color;
-      const { hudInk, hudOutline } = adaptivePalette(sky);
-      expect(contrastRatio(hudInk, color)).toBeGreaterThanOrEqual(4.5);
-      expect(hudOutline).toMatch(/^#[0-9a-f]{8}$/i);
+      const theme = adaptivePalette(sky);
+      expect(contrastRatio(theme.hudInk, color)).toBeGreaterThanOrEqual(4.5);
+      expect(theme).not.toHaveProperty('hudOutline');
     });
   it('usa verde fosforescente sobre montañas distintas, pero complementario si son verdes', () => {
     const landscape = copyLandscape(LANDSCAPE_PRESETS.night.style);
@@ -56,6 +56,6 @@ describe('contraste adaptativo HUD y láser', () => {
     landscape.skyTop = '#e6effb'; landscape.skyBottom = '#e6effb';
     const light = adaptivePalette(landscape);
     expect(relativeLuminance(dark.hudInk)).toBeGreaterThan(relativeLuminance(light.hudInk));
-    expect(light.hudOutline).not.toBe(dark.hudOutline);
+    expect(light.hudInk).not.toBe(dark.hudInk);
   });
 });

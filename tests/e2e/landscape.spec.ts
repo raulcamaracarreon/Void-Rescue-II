@@ -69,6 +69,8 @@ test('HUD sobre el cielo sin tarjetas ni fondos opacos, con texto legible', asyn
       paddingLeft: selector(part).paddingLeft,
       borderLeft: selector(part).borderLeftWidth,
       fontSize: parseFloat(selector(part).fontSize),
+      textShadow: selector(part).textShadow,
+      strokeWidth: selector(part).webkitTextStrokeWidth,
     }));
   });
   for (const style of styles) {
@@ -76,6 +78,8 @@ test('HUD sobre el cielo sin tarjetas ni fondos opacos, con texto legible', asyn
     expect(style.paddingLeft).toBe('0px');
     expect(style.borderLeft).toBe('0px');
     expect(style.fontSize).toBeGreaterThanOrEqual(11);
+    expect(style.textShadow).toBe('none');
+    expect(style.strokeWidth).toBe('0px');
   }
   // All labels and numeric values must share ONE computed foreground color.
   const inks = await hud.evaluate(element => {
@@ -87,12 +91,16 @@ test('HUD sobre el cielo sin tarjetas ni fondos opacos, con texto legible', asyn
     return {
       ink: getComputedStyle(element).getPropertyValue('--vr-hud-ink').trim(),
       colors: targets.map(selector => getComputedStyle(element.querySelector(selector)!).color),
-      colorVars: ['--vr-hud-primary', '--vr-hud-secondary', '--vr-hud-accent']
+      textShadows: targets.map(selector => getComputedStyle(element.querySelector(selector)!).textShadow),
+      strokeWidths: targets.map(selector => getComputedStyle(element.querySelector(selector)!).webkitTextStrokeWidth),
+      colorVars: ['--vr-hud-primary', '--vr-hud-secondary', '--vr-hud-accent', '--vr-hud-outline']
         .map(name => getComputedStyle(element).getPropertyValue(name).trim()),
     };
   });
   expect(inks.ink).toMatch(/^#[0-9a-f]{6}$/i);
   expect(new Set(inks.colors).size).toBe(1);
+  expect(inks.textShadows.every(v => v === 'none')).toBe(true);
+  expect(inks.strokeWidths.every(v => v === '0px')).toBe(true);
   expect(inks.colorVars.every(v => !v)).toBe(true);
   await mkdir('docs/screenshots', { recursive: true });
   await page.screenshot({ path: `docs/screenshots/${info.project.name}-hud-transparent.png` });

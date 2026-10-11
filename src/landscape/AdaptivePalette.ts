@@ -4,7 +4,6 @@ interface RGB { r: number; g: number; b: number }
 export interface AdaptivePalette {
   /** One solid color for all telemetry, selected to contrast with the visible sky. */
   hudInk: string;
-  hudOutline: string;
   laser: string;
   laserOutline: string;
 }
@@ -98,8 +97,6 @@ export function adaptivePalette(style: LandscapeStyle): AdaptivePalette {
   const laserOutline = relativeLuminance(laser) > 0.3 ? '#060d17' : '#fffdf1';
   return {
     hudInk,
-    // Only a thin opposing edge, no filled backgrounds or multicolored labels.
-    hudOutline: relativeLuminance(hudInk) > 0.25 ? '#091119dc' : '#f8fbffcc',
     laser,
     laserOutline,
   };
