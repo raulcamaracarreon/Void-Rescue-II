@@ -1,36 +1,82 @@
-name: Publicar VOID RESCUE
+name: Publicar Void Rescue II en GitHub Pages
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
+# Only the newest main build should be published. The website belongs to VR II.
 concurrency:
-  group: pages
+  group: void-rescue-ii-pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
+    name: Compilar y comprobar
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Obtener código
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Verificar TypeScript
+        run: npm run typecheck
+      - name: Ejecutar pruebas unitarias
+        run: npm test
+      - name: Compilar versión de producción
+        run: npm run build
+      - name: Incorporar identificación de versión
+        shell: bash
+        run: |
+          test -f dist/index.html
+          test -f dist/icon.svg
+          test -d dist/assets
+          printf '{"commit":"%s","builtAt":"%s"}\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > dist/version.json
+      - name: Preparar sitio estático
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-      - id: deployment
+
+  deploy:
+    name: Publicar y verificar
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Verificar configuración de Pages
+        uses: actions/configure-pages@v5
+      - name: Publicar en GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verificar que la versión pública corresponde al commit
+        shell: bash
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          expected="$GITHUB_SHA"
+          target="${SITE_URL%/}/version.json?commit=$expected"
+          for attempt in {1..18}; do
+            if body=$(curl --fail --silent --show-error --location "$target" 2>/dev/null); then
+              if [[ "$body" == *"$expected"* ]]; then
+                echo "Versión pública comprobada: $expected"
+                echo "Jugar: ${SITE_URL%/}/"
+                exit 0
+              fi
+            fi
+            echo "Esperando a Pages (intento $attempt/18)…"
+            sleep 10
+          done
+          echo "::error::GitHub Pages no sirve el commit $expected en ${SITE_URL%/}/"
+          exit 1

@@ -1,6 +1,6 @@
-# Void Rescue II — hoja de ruta inicial
+# Void Rescue II — hoja de ruta técnica e historial
 
-**Estado:** objetivos 1 y 2 integrados en `main` (PR #3, #4, #10 y #11); balance visual y jugable pendiente. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
+**Estado:** motor de paisajes, biblioteca de 13 mundos, aparición de enemigos clásica/dinámica, misiones y rescate múltiple integrados en `main` (PR #3–#12). El workflow de publicación independiente de Void Rescue II apunta a `main`; la primera activación de GitHub Pages y el balance en una PC real deben comprobarse por separado. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
 
 ## Principio de diseño
 
@@ -110,3 +110,11 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - [x] Migración de preferencias v1: conservar `custom` como borrador y dar acceso a guardarlo con nombre. Validación de IDs, colores y capas; los nombres se representan como texto, no HTML.
 - [x] `npm run typecheck`, compilación, **99 pruebas unitarias y 22 pruebas Playwright** aprobadas en WebGPU automático y WebGL2 (PR #12).
 - [ ] Revisión perceptiva y balance cromático de los nuevos ambientes en una PC real.
+
+## Publicación de Void Rescue II (octubre 2026)
+
+- [x] Workflow independiente `.github/workflows/deploy-pages.yml` configurado para `main`, con validación TypeScript/Vitest y despliegue exclusivo de `dist/`.
+- [x] `version.json` de producción identifica el SHA exacto y el workflow comprueba que la URL pública sirve ese mismo commit.
+- [x] README reescrito para Void Rescue II: enlace propio, modalidades, controles, rescate múltiple, 13 paisajes y biblioteca, conservación local de datos, pruebas y actualización.
+- [x] Manual previo archivado en `docs/README_HISTORICO.md` y guía de activación en `docs/DEPLOYMENT.md`.
+- [ ] Confirmar configuración Pages **Settings → Pages → Source: GitHub Actions**, primer despliegue y respuesta HTTP pública; la habilitación requiere permisos de administración del repositorio.
