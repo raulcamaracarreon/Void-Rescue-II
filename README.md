@@ -1,4 +1,21 @@
-# VOID RESCUE
+# Void Rescue II — En desarrollo
+
+Nueva versión independiente, derivada del código funcional de [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), e inspirada en [Landscape Generator — Parallax](https://github.com/raulcamaracarreon/Landscape-Generator-Parallax).
+
+**Objetivos de esta versión:**
+
+- **Paisajes procedurales con paralaje:** montañas y edificios, paletas predefinidas y personalizadas, editor y transición de paisaje al completar cada oleada.
+- **Jugabilidad rediseñada:** enemigos recurrentes por zona y tiempo; modo Rescatista con evacuación de todos los colonos recuperables y modo Defensivo con supervivencia temporizada y mínimo de colonos protegidos.
+
+**Estado actual (11 de octubre de 2026):** copia base del código de Void Rescue I importada íntegramente (128 archivos), con historial nuevo e independiente. La implementación de las nuevas funciones está pendiente. Las pruebas de compilación y ejecución de esta copia aún no se han realizado.
+
+**[Ver hoja de ruta y criterios técnicos](docs/VOID_RESCUE_II_ROADMAP.md)**.
+
+> La dirección de juego online y las instrucciones que aparecen en el manual heredado corresponden todavía a **Void Rescue I**, no a una versión publicada de Void Rescue II.
+
+---
+
+## Manual heredado: Void Rescue I
 
 Arcade 2.5D de defensa y rescate espacial. Incluye oleadas sin final, dificultad creciente y récords locales, con teclado y joypad: ocho colonos, abductores, mutación, caída, rescate, entrega, combate, bomba, portal, vidas y resumen. El acabado artístico y la evaluación humana del control/audio siguen pendientes.
 
