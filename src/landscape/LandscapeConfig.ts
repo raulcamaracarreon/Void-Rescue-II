@@ -112,9 +112,9 @@ export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: 
   ash_world: { label: 'Mundo de cenizas', style: makePreset('#a3a7ac', '#272b35', 'mixed', 129) },
   amethyst_planet: { label: 'Planeta amatista', style: makePreset('#bd9be2', '#402165', 'mountains', 143) },
   // User-provided references: orange/red Martian, foggy polar blue-gray and magenta alien.
-  martian_dusk: { label: 'Ocaso Marciano', style: makePreset('#f04b27', '#3d230f', 'mixed', 157) },
-  polar_overcast: { label: 'Nublado Polar', style: makePreset('#f7f7f9', '#4b5685', 'mixed', 171) },
-  strange_planet: { label: 'Planeta extraño', style: makePreset('#f227b3', '#350033', 'mixed', 185) },
+  martian_dusk: { label: 'Ocaso Marciano', style: makePreset('#ef4d25', '#482a0f', 'mixed', 157) },
+  polar_overcast: { label: 'Nublado Polar', style: makePreset('#fafafa', '#46527c', 'mixed', 171) },
+  strange_planet: { label: 'Planeta extraño', style: makePreset('#f92fc3', '#481043', 'mixed', 185) },
 };
 
 /** RGB interpolation matches the original Landscape Generator's mix(a,b,t) exactly. */
@@ -139,9 +139,9 @@ const AUTO_PRESETS: Record<LandscapePreset, AutomaticLandscape> = {
   neon_megacity: { skyColor: '#3355ae', frontColor: '#170f51', layerCount: 6, composition: 'buildings' },
   ash_world: { skyColor: '#a3a7ac', frontColor: '#272b35', layerCount: 6, composition: 'mixed' },
   amethyst_planet: { skyColor: '#bd9be2', frontColor: '#402165', layerCount: 6, composition: 'mountains' },
-  martian_dusk: { skyColor: '#f04b27', frontColor: '#3d230f', layerCount: 6, composition: 'mixed' },
-  polar_overcast: { skyColor: '#f7f7f9', frontColor: '#4b5685', layerCount: 6, composition: 'mixed' },
-  strange_planet: { skyColor: '#f227b3', frontColor: '#350033', layerCount: 6, composition: 'mixed' },
+  martian_dusk: { skyColor: '#ef4d25', frontColor: '#482a0f', layerCount: 6, composition: 'mixed' },
+  polar_overcast: { skyColor: '#fafafa', frontColor: '#46527c', layerCount: 6, composition: 'mixed' },
+  strange_planet: { skyColor: '#f92fc3', frontColor: '#481043', layerCount: 6, composition: 'mixed' },
 };
 
 export function copyLandscape(style: LandscapeStyle): LandscapeStyle {
