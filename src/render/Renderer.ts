@@ -10,6 +10,8 @@ import { CameraRig } from './CameraRig';
 import { createShip } from './models/Ship';
 import { emission } from './materials';
 import { WorldScene } from './WorldScene';
+import { defaultLandscapePreferences } from '../landscape/LandscapeConfig';
+import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 import { CombatVisuals } from './CombatVisuals';
 
 export function disposeTree(root: Object3D): void {
@@ -38,6 +40,7 @@ export class FlightRenderer {
   backend: 'webgpu' | 'webgl2' = 'webgl2';
   private world: WorldScene;
   private seed: number;
+  private landscapePreferences: LandscapePreferences;
   private readonly ship = createShip();
   readonly combat = new CombatVisuals();
   private readonly shots = new Map<number, Mesh>();
@@ -50,8 +53,10 @@ export class FlightRenderer {
   private height = 1;
   private readonly observer: ResizeObserver;
 
-  constructor(canvas: HTMLCanvasElement, seed: number, forceWebGL: boolean) {
+  constructor(canvas: HTMLCanvasElement, seed: number, forceWebGL: boolean,
+    landscapePreferences: LandscapePreferences = defaultLandscapePreferences()) {
     this.seed = seed;
+    this.landscapePreferences = landscapePreferences;
     this.rig = new CameraRig(CONFIG.startX);
     this.renderer = new WebGPURenderer({ canvas, antialias: true, forceWebGL, powerPreference: 'high-performance' });
     this.renderer.outputColorSpace = SRGBColorSpace;
@@ -59,7 +64,7 @@ export class FlightRenderer {
     this.renderer.toneMappingExposure = 1.25;
     this.renderer.info.autoReset = false;
     this.camera.position.set(0, 52, 120);
-    this.world = new WorldScene(seed);
+    this.world = new WorldScene(seed, landscapePreferences);
     this.scene.add(this.world.group, this.world.backdrop, this.ship.group, this.combat.group);
     const hemisphere = new HemisphereLight(0x8fc8df, 0x1c292f, 2.0);
     const key = new DirectionalLight(0xe0ebdf, 3.7);
@@ -98,9 +103,15 @@ export class FlightRenderer {
       this.scene.remove(this.world.group, this.world.backdrop);
       disposeTree(this.world.group); disposeTree(this.world.backdrop);
       this.seed = state.seed;
-      this.world = new WorldScene(state.seed);
+      this.world = new WorldScene(state.seed, this.landscapePreferences);
       this.scene.add(this.world.group, this.world.backdrop);
     }
+    this.world.setLandscape(this.landscapePreferences, state.wave);
+  }
+
+  setLandscape(preferences: LandscapePreferences, wave: number): void {
+    this.landscapePreferences = preferences;
+    this.world.setLandscape(preferences, wave);
   }
 
   draw(state: FlightState, alpha: number, elapsed: number, active: boolean, title: boolean, reducedMotion: boolean): void {
