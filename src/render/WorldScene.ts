@@ -6,6 +6,9 @@ import { Random } from '../core/Random';
 import { CONFIG, SAFE_BASE, SETTLEMENTS } from '../game/config';
 import type { MissionMode } from '../game/MissionMode';
 import { Terrain } from '../game/Terrain';
+import { defaultLandscapePreferences, resolveLandscape } from '../landscape/LandscapeConfig';
+import type { LandscapePreferences } from '../landscape/LandscapeConfig';
+import { ParallaxLandscape } from './ParallaxLandscape';
 import { nearCameraX } from '../core/WorldWrap';
 import { basaltMaterial, beaconMaterial, emission, metal, planetMaterial, skyMaterial } from './materials';
 
@@ -100,6 +103,8 @@ export class WorldScene {
   readonly group = new Group();
   readonly backdrop = new Group();
   private readonly terrainCopies: Group[] = [];
+  private readonly landscape = new ParallaxLandscape();
+  private lastLandscapeKey = '';
   private readonly settlements: Group[] = [];
   private readonly stars: InstancedMesh;
   private readonly starPositions: { x: number; y: number; z: number; size: number }[] = [];
@@ -108,14 +113,14 @@ export class WorldScene {
   private readonly moon = new Group();
   private readonly fortress: Group;
 
-  constructor(seed: number) {
+  constructor(private readonly seed: number, preferences: LandscapePreferences = defaultLandscapePreferences()) {
     const random = new Random(seed ^ 0x71a4);
     const terrain = new Terrain(seed);
     this.fortress = createRescueFortress(terrain);
     this.group.add(this.fortress);
     this.sky = new Mesh(new PlaneGeometry(1, 1), skyMaterial());
     this.sky.position.set(0, 52, -170);
-    this.backdrop.add(this.sky);
+    this.backdrop.add(this.sky, this.landscape.group);
 
     const planet = new Mesh(new SphereGeometry(27, 64, 48), planetMaterial());
     planet.scale.y = 0.96;
@@ -137,13 +142,10 @@ export class WorldScene {
     this.backdrop.add(this.stars);
 
     const mainRidge = makeRidge(seed, 8, false);
-    const farRidge = makeRidge(seed ^ 225, -55, true);
-    const midRidge = makeRidge(seed ^ 874, -25, true);
-    midRidge.scale.y = 0.6;
-    // Share geometry and materials across the three neighboring world images.
+    // The actual collider/ground stays identical; parallax replaces only distant ridges.
     for (let copy = -1; copy <= 1; copy++) {
       const tile = new Group();
-      tile.add(mainRidge.clone(), farRidge.clone(), midRidge.clone());
+      tile.add(mainRidge.clone());
       this.terrainCopies.push(tile);
       this.group.add(tile);
     }
@@ -154,10 +156,25 @@ export class WorldScene {
       this.settlements.push(model);
       this.group.add(model);
     }
+    this.setLandscape(preferences, 1);
+  }
+
+  setLandscape(preferences: LandscapePreferences, wave: number): void {
+    const { style } = resolveLandscape(preferences, wave);
+    const key = JSON.stringify({ style, wave });
+    if (key === this.lastLandscapeKey) return;
+    this.lastLandscapeKey = key;
+    const previous = this.sky.material;
+    this.sky.material = skyMaterial(style.skyTop, style.skyBottom);
+    if (Array.isArray(previous)) previous.forEach(material => material.dispose());
+    else previous.dispose();
+    this.stars.visible = style.stars;
+    this.landscape.rebuild(style, this.seed, wave);
   }
 
   update(cameraX: number, viewWidth: number, missionMode: MissionMode): void {
     this.backdrop.position.x = cameraX;
+    this.landscape.update(cameraX);
     this.sky.scale.set(viewWidth + 5, 140, 1);
     this.moon.position.x = viewWidth * 0.24 - Math.sin(cameraX / CONFIG.worldWidth * Math.PI * 2) * 4;
     const tileIndex = Math.floor(cameraX / CONFIG.worldWidth);
