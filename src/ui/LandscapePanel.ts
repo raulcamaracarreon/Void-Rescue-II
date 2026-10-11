@@ -106,7 +106,7 @@ export class LandscapePanel {
         this.commit();
       };
       // The number field publishes immediately, without forcing a focus-losing rerender mid-typing.
-      if (input.dataset.auto === 'layerCount') input.addEventListener('input', apply);
+      if (input.dataset.auto === 'layerCount') input.addEventListener('input', () => { apply(); this.paintSwatches(); });
       input.addEventListener('change', () => { apply(); this.render(); });
     }
     for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-sky]')) {
@@ -243,6 +243,20 @@ export class LandscapePanel {
     this.description.textContent = `${name} · ${style.layers.length} capas · ${this.preferences.mode === 'automatic' ? 'gradiente automático' : 'edición avanzada'}${suffix}`;
   }
 
+  private paintSwatches(): void {
+    this.swatches.replaceChildren();
+    if (this.preferences.mode !== 'automatic') return;
+    const style = resolveLandscape(this.preferences, this.currentWave()).style;
+    const colors = [style.automatic!.skyColor, ...style.layers.map(layer => layer.color)];
+    for (let i = 0; i < colors.length; i++) {
+      const swatch = document.createElement('span');
+      swatch.style.backgroundColor = colors[i]!;
+      swatch.title = i === 0 ? 'Cielo' : `Capa ${i}`;
+      swatch.setAttribute('aria-label', swatch.title);
+      this.swatches.append(swatch);
+    }
+  }
+
   private render(): void {
     const style = resolveLandscape(this.preferences, this.currentWave()).style;
     const automatic = style.automatic!;
@@ -255,17 +269,7 @@ export class LandscapePanel {
       const key = input.dataset.auto as keyof AutomaticLandscape;
       input.value = String(automatic[key]);
     }
-    this.swatches.replaceChildren();
-    if (this.preferences.mode === 'automatic') {
-      const colors = [automatic.skyColor, ...style.layers.map(layer => layer.color)];
-      for (let index = 0; index < colors.length; index++) {
-        const swatch = document.createElement('span');
-        swatch.style.backgroundColor = colors[index]!;
-        swatch.title = index === 0 ? 'Cielo' : `Capa ${index}`;
-        swatch.setAttribute('aria-label', swatch.title);
-        this.swatches.append(swatch);
-      }
-    }
+    this.paintSwatches();
     for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-sky]')) {
       const key = input.dataset.sky;
       if (key === 'skyTop') input.value = style.skyTop;
