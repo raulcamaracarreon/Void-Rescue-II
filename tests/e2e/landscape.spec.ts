@@ -77,6 +77,23 @@ test('HUD sobre el cielo sin tarjetas ni fondos opacos, con texto legible', asyn
     expect(style.borderLeft).toBe('0px');
     expect(style.fontSize).toBeGreaterThanOrEqual(11);
   }
+  // All labels and numeric values must share ONE computed foreground color.
+  const inks = await hud.evaluate(element => {
+    const targets = [
+      '.mission p', '.mission div > span', '.mission-index',
+      '.mission-status', '.coordinates', '.coordinates b',
+      '.combat-stats', '.combat-stats span', '.combat-stats b', '.combat-message',
+    ];
+    return {
+      ink: getComputedStyle(element).getPropertyValue('--vr-hud-ink').trim(),
+      colors: targets.map(selector => getComputedStyle(element.querySelector(selector)!).color),
+      colorVars: ['--vr-hud-primary', '--vr-hud-secondary', '--vr-hud-accent']
+        .map(name => getComputedStyle(element).getPropertyValue(name).trim()),
+    };
+  });
+  expect(inks.ink).toMatch(/^#[0-9a-f]{6}$/i);
+  expect(new Set(inks.colors).size).toBe(1);
+  expect(inks.colorVars.every(v => !v)).toBe(true);
   await mkdir('docs/screenshots', { recursive: true });
   await page.screenshot({ path: `docs/screenshots/${info.project.name}-hud-transparent.png` });
 });
