@@ -27,7 +27,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test tests/e2e/landscape.spec.ts tests/e2e/spawn-mode.spec.ts
+      - run: npx playwright test tests/e2e/landscape.spec.ts tests/e2e/spawn-mode.spec.ts tests/e2e/rescue-beam.spec.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
