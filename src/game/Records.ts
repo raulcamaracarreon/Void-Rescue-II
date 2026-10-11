@@ -6,7 +6,7 @@ import type { MissionMode } from './MissionMode';
 export interface PlayerRecord {
   id: string; pilot: string; score: number; wave: number; difficulty: Difficulty; missionMode?: MissionMode; date: string;
 }
-export const RECORDS_KEY = 'void-rescue.records.v1';
+export const RECORDS_KEY = 'void-rescue-ii.records.v1';
 export const PILOT_KEY = 'void-rescue.pilot';
 export const INITIALS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 export function pilotName(value: unknown): string {
