@@ -24,9 +24,14 @@ test('E mantenida eleva al colono y lo oculta dentro de la nave con contador de 
 });
 
 test('soltar E a mitad del ascenso interrumpe la extracción', async ({ page }) => {
-  await page.keyboard.down('KeyE');
-  await page.waitForFunction(() => window.__VOID_RESCUE__!.getState().colonists[0]!.status === 'extracting');
-  await page.keyboard.up('KeyE');
+  // Dispatch held key and release in the same browser interaction. Avoid
+  // Playwright roundtrip delays that can let the passenger finish boarding.
+  await page.evaluate(async () => {
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', bubbles: true }));
+    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    document.body.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE', bubbles: true }));
+  });
+  await page.waitForFunction(() => window.__VOID_RESCUE__!.getState().events.some(e => e.kind === 'extraction'));
   await page.waitForFunction(() => window.__VOID_RESCUE__!.getState().colonists[0]!.status !== 'extracting');
   const c = (await page.evaluate(() => window.__VOID_RESCUE__!.getState())).colonists[0]!;
   expect(c.onboard).not.toBe(true);
