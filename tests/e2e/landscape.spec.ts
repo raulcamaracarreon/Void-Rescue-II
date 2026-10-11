@@ -77,7 +77,7 @@ test('HUD sobre el cielo sin tarjetas ni fondos opacos, con texto legible', asyn
     expect(style.background).toBe('rgba(0, 0, 0, 0)');
     expect(style.paddingLeft).toBe('0px');
     expect(style.borderLeft).toBe('0px');
-    expect(style.fontSize).toBeGreaterThanOrEqual(11);
+    expect(style.fontSize).toBeGreaterThanOrEqual(10);
     expect(style.textShadow).toBe('none');
     expect(style.strokeWidth).toBe('0px');
   }

@@ -28,7 +28,13 @@ export function hitPlayer(ctx: CombatContext): void {
   if (!p.alive || p.invulnerable > 0 || s.outcome !== 'active') return;
   p.alive = false; p.vx = 0; p.vy = 0; s.lives--;
   s.respawnTimer = COMBAT.respawnSeconds; ctx.emit('player-hit', p.x, p.y);
-  for (const c of s.colonists.filter(c => c.status === 'carried')) { c.status = 'falling'; c.vy = 0; }
+  let passenger = 0;
+  for (const c of s.colonists.filter(c => c.status === 'carried')) {
+    // Passenger cabin is not indestructible: a crash releases all occupants.
+    // Spread them slightly to avoid stacking several rescueable bodies.
+    c.status = 'falling'; c.onboard = false; c.vy = 0;
+    c.x = wrapX(p.x + (passenger++ - 1) * 1.7, CONFIG.worldWidth); c.y = p.y - 2;
+  }
   if (s.lives <= 0) { s.outcome = 'defeat'; ctx.emit('defeat', p.x, p.y); }
 }
 

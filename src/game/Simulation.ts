@@ -100,12 +100,15 @@ export class Simulation {
     if (s.enabled) {
       if (input.bomb && !this.bombHeld) useBomb(this.context, input);
       const contextPressed = Boolean(input.portal && !this.portalHeld);
-      const extracting = contextPressed && s.missionMode === 'rescue' && startPlayerExtraction(this.context);
+      // The rescue beam is level-triggered, not a one-shot action. Keeping E/Y
+      // held picks the next nearby colonist after the previous one boards.
+      const extracting = Boolean(input.portal && s.missionMode === 'rescue'
+        && startPlayerExtraction(this.context));
       updateWave(this.context, dt, contextPressed && !extracting);
       updateEnemies(this.context, dt);
       updateBomb(this.context, dt);
       updateProjectiles(this.context, dt, input.view);
-      updateColonists(this.context, dt);
+      updateColonists(this.context, dt, Boolean(input.portal));
       resolveWave(this.context);
     } else {
       for (const shot of s.shots) {
