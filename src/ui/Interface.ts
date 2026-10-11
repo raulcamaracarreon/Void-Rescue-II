@@ -167,11 +167,8 @@ export class Interface {
 
   setLandscapeTheme(style: LandscapeStyle): void {
     const theme = adaptivePalette(style);
-    this.hud.style.setProperty('--vr-hud-primary', theme.primary);
-    this.hud.style.setProperty('--vr-hud-secondary', theme.secondary);
-    this.hud.style.setProperty('--vr-hud-accent', theme.accent);
-    this.hud.style.setProperty('--vr-hud-warning', theme.warning);
-    this.hud.style.setProperty('--vr-hud-outline', theme.outline);
+    this.hud.style.setProperty('--vr-hud-ink', theme.hudInk);
+    this.hud.style.setProperty('--vr-hud-outline', theme.hudOutline);
   }
 
   toggleDiagnostics(): void { this.debugVisible = !this.debugVisible; this.diagnostics.hidden = !this.debugVisible; }
