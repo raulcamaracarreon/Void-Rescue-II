@@ -5,13 +5,26 @@ Nueva versión independiente, derivada del código funcional de [Void Rescue I](
 **Objetivos de esta versión:**
 
 - **Paisajes procedurales con paralaje:** montañas y edificios, paletas predefinidas y personalizadas, editor y transición de paisaje al completar cada oleada.
-- **Jugabilidad rediseñada:** enemigos recurrentes por zona y tiempo; modo Rescatista con evacuación de todos los colonos recuperables y modo Defensivo con supervivencia temporizada y mínimo de colonos protegidos.
+- **Dos sistemas de enemigos seleccionables:** Clásico conserva el calendario finito y las reglas actuales; Dinámico genera amenazas por sectores con objetivos Rescatista y Defensivo diferenciados.
 
-**Estado actual (11 de octubre de 2026):** el objetivo 1 está integrado en `main` mediante los [PR #3](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/3) y [#4](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/4): cuatro paletas, gradiente RGB automático definido por dos colores, editor avanzado por capa, 2–10 capas de montañas/edificios, estrellas, semillas reproducibles, persistencia local y paisajes distintos por oleada. Las reglas de los modos de juego siguen siendo las heredadas de Void Rescue I; el objetivo 2 está pendiente. La clasificación de récords de Void Rescue II utiliza otra clave local para no mezclar puntuaciones.
+**Estado actual (11 de octubre de 2026):** el objetivo 1 está integrado en `main` mediante los [PR #3](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/3) y [#4](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/4): cuatro paletas, gradiente RGB automático definido por dos colores, editor avanzado por capa, 2–10 capas de montañas/edificios, estrellas, semillas reproducibles, persistencia local y paisajes distintos por oleada. En la rama de desarrollo `feat/dynamic-waves-gameplay` se agrega la fase B como opción independiente, **sin sustituir el juego clásico**; aún requiere validación y balance de juego. La clasificación de récords de Void Rescue II utiliza otra clave local para no mezclar puntuaciones.
 
 **Verificación:** `npm ci`, `npm run typecheck`, 69 pruebas Vitest y `npm run build` aprobados en GitHub Actions; ocho recorridos Playwright del editor aprobados en Chromium (rutas WebGPU automática y WebGL2) a 960×540. También se revisaron capturas a 1920×1080 en ambos backends. La revisión perceptiva en una PC real y el conjunto completo de recorridos del juego aún están pendientes.
 
 **[Ver hoja de ruta y criterios técnicos](docs/VOID_RESCUE_II_ROADMAP.md)**.
+
+## Elegir el sistema de juego
+
+En el título, antes de iniciar un vuelo, aparecen tres controles independientes:
+
+- **ENEMIGOS — Clásico (predeterminado):** enemigos programados en un número finito; victoria según las reglas heredadas de Void Rescue I, incluyendo eliminar amenazas y completar rescates pendientes.
+- **ENEMIGOS — Dinámico por zonas:** amenazas que reaparecen mientras la oleada permanezca activa, según la ubicación del jugador, con distancia de seguridad, cooldown regional y cupo limitado; no hace falta exterminarlas para obtener la victoria.
+- **MISIÓN — Rescatista / Defensivo:** disponible con ambos sistemas. En el sistema dinámico, Rescatista termina cuando todos los colonos estén a salvo o perdidos y al menos uno haya sido entregado; Defensivo exige resistir **120 segundos y conservar 4 de 8 colonos** en dificultad Normal durante la primera oleada. El tiempo crece hasta un máximo de 180 segundos en oleadas posteriores; los umbrales dependen de la dificultad.
+
+Los récords se clasifican por separado según el sistema de enemigos y la misión. Los anteriores se conservan como clásicos. La selección se guarda para el siguiente vuelo, sin cambiar el comportamiento de una partida en curso.
+
+**Ajuste visual:** tipografía del HUD ligeramente reducida, manteniendo un único color sólido sin rellenos de fondo, sombras ni contornos.
+
 
 ## Probar los paisajes de Void Rescue II
 
