@@ -71,7 +71,9 @@ export class CombatVisuals {
       liveIds.add(c.id);
       let model = this.entities.get(c.id);
       if (!model || model.userData.kind !== 'colonist') { if (model) this.group.remove(model); model = this.colonistTemplate.clone(); model.userData.kind = 'colonist'; this.entities.set(c.id, model); this.group.add(model); }
-      model.position.set(x(c.x), c.y, 12); model.visible = visible(c.x);
+      model.position.set(x(c.x), c.y, 12);
+      // Rescued colonists board the ship rather than dangling beneath it.
+      model.visible = visible(c.x) && !c.onboard;
       const walk = c.status === 'ground' ? Math.sin(state.time * 8 + c.id) * 0.3 : 0;
       model.getObjectByName('leg-left')!.rotation.z = walk; model.getObjectByName('leg-right')!.rotation.z = -walk;
       const beacon = model.getObjectByName('beacon')!;
