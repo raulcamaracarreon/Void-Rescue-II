@@ -83,7 +83,7 @@ export function chooseHudInk(style: LandscapeStyle): string {
     ? [0.18, 0.14, 0.10, 0.06, 0.82, 0.90, 0.96]
     : [0.82, 0.90, 0.96, 0.18, 0.14, 0.10, 0.06];
   const candidates = lightness.map(l => hsl(hue, 0.85, l));
-  const neutrals = ['#071019', '#f8fbff'];
+  const neutrals = ['#000000', '#ffffff'];
   for (const required of [7, 4.5]) {
     const complementary = candidates.find(ink => contrastRatio(ink, backdrop) >= required);
     if (complementary) return complementary;
