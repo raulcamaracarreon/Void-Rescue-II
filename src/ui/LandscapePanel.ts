@@ -96,7 +96,7 @@ export class LandscapePanel {
       this.switchMode(this.mode.value as LandscapeEditorMode);
     });
     for (const input of this.dialog.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-auto]')) {
-      input.addEventListener('change', () => {
+      const apply = () => {
         const style = this.mutableStyle();
         const settings = style.automatic!;
         const key = input.dataset.auto as keyof AutomaticLandscape;
@@ -104,8 +104,10 @@ export class LandscapePanel {
         else if (key === 'composition') settings.composition = input.value === 'buildings' || input.value === 'mixed' ? input.value : 'mountains';
         else if (key === 'skyColor' || key === 'frontColor') settings[key] = input.value;
         this.commit();
-        this.render();
-      });
+      };
+      // The number field publishes immediately, without forcing a focus-losing rerender mid-typing.
+      if (input.dataset.auto === 'layerCount') input.addEventListener('input', apply);
+      input.addEventListener('change', () => { apply(); this.render(); });
     }
     for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-sky]')) {
       input.addEventListener('change', () => {
