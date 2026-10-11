@@ -99,8 +99,7 @@ jobs:
             exit 1
           fi
           # The immutable public release must identify the exact commit.
-          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
-            fetch --quiet origin "refs/tags/$TAG:refs/tags/$TAG"
+          git fetch --quiet origin "refs/tags/$TAG:refs/tags/$TAG"
           RELEASE_SHA=$(git rev-list -n 1 "$TAG")
           if [[ "$RELEASE_SHA" != "$GITHUB_SHA" ]]; then
             echo "::error::La etiqueta $TAG apunta a $RELEASE_SHA, no a $GITHUB_SHA"
