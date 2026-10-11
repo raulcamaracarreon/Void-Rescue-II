@@ -14,7 +14,7 @@ const MIN_DISTANCE = 82;
 const MAX_DISTANCE = 170;
 
 /** Adjustable defensive goal, separate from enemy population and kill count. */
-export function defenseGoal(wave: number, difficulty: string, colonists = COMBAT.colonistX.length): {
+export function defenseGoal(wave: number, difficulty: string, colonists: number = COMBAT.colonistX.length): {
   seconds: number; minimum: number;
 } {
   const rank = difficultyProfile(difficulty).rank;
