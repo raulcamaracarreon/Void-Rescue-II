@@ -23,3 +23,22 @@
 .landscape-buttons button:disabled{opacity:.35;cursor:default}
 .landscape-dialog .primary{font-size:1em;min-width:0;width:100%;margin-top:.6em}
 @media(max-width:760px){.landscape-dialog{width:92cqw;padding:3cqw}.landscape-global{grid-template-columns:repeat(2,minmax(0,1fr))}.landscape-layer{grid-template-columns:1.7em 1.3fr .9fr .9fr .9fr;gap:.3em}.landscape-buttons{justify-content:flex-start}.landscape-layer label{font-size:.73em}}
+
+/* Gradient-first editor: only two color pickers are shown in Automatic mode. */
+.landscape-selection-row{display:grid;grid-template-columns:1fr 1fr;gap:1em}
+.landscape-selection-row .landscape-label{display:flex;flex-direction:column;align-items:stretch;gap:.5em;min-width:0;margin:.5em 0}
+.landscape-selection-row select{width:100%}
+.landscape-automatic .landscape-global{grid-template-columns:repeat(4,minmax(0,1fr))}
+.landscape-automatic .landscape-help{margin:.6em 0 0}
+.landscape-swatches-label{font:.75em var(--mono);letter-spacing:.08em;color:#adc9c3;margin:.8em 0 .3em}
+.landscape-swatches{display:flex;width:100%;height:2.5em;overflow:hidden;border-radius:5px;border:1px solid #b1d5ce55}
+.landscape-swatches span{flex:1;min-width:0}
+.landscape-common{display:flex;align-items:end;gap:2em;border-top:1px solid var(--line);padding:1em 0}
+.landscape-common label{display:flex;flex-direction:column;gap:.5em;min-width:0;font:.85em var(--mono);color:#a8c6bb}
+.landscape-common input[type=number]{width:12em;max-width:100%}
+.landscape-common input[type=checkbox]{height:1.5em;width:1.5em}
+@media(max-width:760px){
+.landscape-selection-row{grid-template-columns:1fr}
+.landscape-automatic .landscape-global{grid-template-columns:repeat(2,minmax(0,1fr))}
+.landscape-common{gap:1em}
+}

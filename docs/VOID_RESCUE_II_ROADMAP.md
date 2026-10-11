@@ -69,3 +69,11 @@ Este repositorio es una nueva línea de desarrollo derivada de la **instantánea
 - [ ] Objetivo 2: spawns dinámicos y nuevas condiciones de victoria.
 
 Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU dedicada: se mantuvieron las capturas de prueba visual y se ejecutaron las interacciones a 960×540, donde todos los casos aprobaron. No se extrapola ese resultado al rendimiento en otras máquinas.
+
+## Refinamiento visual — dos modalidades de edición (2026-10-11)
+
+- **Automático (predeterminado):** cielo uniforme elegido por el usuario y color frontal; cada capa `i` (0..N-1) recibe una interpolación RGB `(i+1)/N`, idéntica al generador original. La última capa coincide exactamente con el segundo extremo. Reparto de amplitud, detalle y velocidad por profundidad.
+- **Avanzado:** edición individual de tipo, color, amplitud, detalle y gradiente del cielo. Al entrar por primera vez desde Automático, parte de las capas que se están viendo; al regresar, las ediciones avanzadas quedan preservadas.
+- Selección de ambientes (automático por oleada o preset fijo) separada de modalidad de edición; personalización y validación persistidas.
+- Compatibilidad: preferencias v1 personalizadas se conservan y migran como modo Avanzado.
+- La nueva interfaz sólo presenta dos controles de color en modo Automático (más parámetros no cromáticos para capas, composición, semillas y estrellas).

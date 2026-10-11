@@ -22,6 +22,8 @@ export function engineMaterial() {
 
 export function skyMaterial(top = '#020509', bottom = '#19303b'): MeshBasicNodeMaterial {
   const material = new MeshBasicNodeMaterial({ depthWrite: false });
+  // When Automatic chooses one sky color, render it uniformly (no extra ribbon).
+  if (top === bottom) { material.colorNode = color(top); return material; }
   const horizon = float(1).sub(uv().y).pow(3);
   const ribbon = sin(uv().x.mul(8).add(uv().y.mul(5))).mul(0.5).add(0.5);
   material.colorNode = mix(color(top), color(bottom), horizon)
