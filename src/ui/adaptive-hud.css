@@ -1,11 +1,11 @@
-/* HUD flotante: contraste cromático directo, SIN tarjetas que oculten el paisaje.
+/* HUD flotante: UNA sola tinta de contraste, sin fondos ni tarjetas.
    The palette is derived from the current sky, while a fine contrasting text
    outline keeps labels legible as mountains pass behind them. */
 .flight-hud.combat .mission,
 .flight-hud.combat .coordinates,
 .flight-hud.combat .combat-stats,
 .flight-hud.combat .combat-message {
-  color: var(--vr-hud-primary, #e9f5f0);
+  color: var(--vr-hud-ink, #f8fbff);
   background: transparent;
   border: 0;
   border-radius: 0;
@@ -13,7 +13,7 @@
   padding: 0;
   text-shadow: 0 0 1px var(--vr-hud-outline, #000d),
                0 1px 1px var(--vr-hud-outline, #000d);
-  -webkit-text-stroke: .18px var(--vr-hud-outline, #000d);
+  -webkit-text-stroke: .24px var(--vr-hud-outline, #000d);
 }
 .flight-hud.combat .mission {
   top: 18.5%;
@@ -21,27 +21,27 @@
   gap: .9cqw;
 }
 .flight-hud.combat .mission p {
-  font-size: clamp(12px, .96cqw, 18px);
-  color: var(--vr-hud-primary);
+  font-size: clamp(14px, 1.05cqw, 19px);
+  color: var(--vr-hud-ink, #f8fbff);
   font-weight: 700;
   letter-spacing: .035em;
 }
 .flight-hud.combat .mission div>span {
-  color: var(--vr-hud-secondary);
-  font-size: clamp(11px, .77cqw, 15px);
+  color: var(--vr-hud-ink, #f8fbff);
+  font-size: clamp(12px, .86cqw, 16px);
   line-height: 1.4;
 }
 .flight-hud.combat .mission-index {
-  color: var(--vr-hud-accent);
-  font-size: clamp(13px, 1.03cqw, 19px);
+  color: var(--vr-hud-ink, #f8fbff);
+  font-size: clamp(14px, 1.06cqw, 19px);
   font-weight: 700;
   background: transparent;
   border: 1px solid currentColor;
   padding: .35cqw;
 }
 .flight-hud.combat .mission-status {
-  color: var(--vr-hud-accent);
-  font-size: clamp(10px, .76cqw, 15px);
+  color: var(--vr-hud-ink, #f8fbff);
+  font-size: clamp(12px, .82cqw, 16px);
   border-left: 1px solid currentColor;
   letter-spacing: .045em;
   white-space: nowrap;
@@ -49,11 +49,11 @@
 .flight-hud.combat .coordinates {
   top: 18.8%;
   right: 3.5%;
-  color: var(--vr-hud-secondary);
-  font-size: clamp(11px, .79cqw, 16px);
+  color: var(--vr-hud-ink, #f8fbff);
+  font-size: clamp(12px, .86cqw, 17px);
 }
 .flight-hud.combat .coordinates b {
-  color: var(--vr-hud-primary);
+  color: var(--vr-hud-ink, #f8fbff);
   font-weight: 700;
 }
 .flight-hud.combat .combat-stats {
@@ -63,13 +63,13 @@
   flex-wrap: wrap;
   max-width: 92%;
   gap: clamp(13px, 1.25cqw, 22px);
-  color: var(--vr-hud-secondary);
-  font-size: clamp(11px, .78cqw, 15px);
+  color: var(--vr-hud-ink, #f8fbff);
+  font-size: clamp(12px, .86cqw, 16px);
   line-height: 1.2;
 }
 .flight-hud.combat .combat-stats b {
   display: block;
-  color: var(--vr-hud-primary);
+  color: var(--vr-hud-ink, #f8fbff);
   font-size: clamp(15px, 1.17cqw, 21px);
   font-weight: 700;
   margin-top: .32cqw;
@@ -78,8 +78,8 @@
   top: 39%;
   left: 3.5%;
   max-width: 82%;
-  color: var(--vr-hud-accent);
-  font-size: clamp(11px, .85cqw, 17px);
+  color: var(--vr-hud-ink, #f8fbff);
+  font-size: clamp(13px, .96cqw, 18px);
   font-weight: 700;
   letter-spacing: .01em;
   line-height: 1.4;
@@ -94,4 +94,18 @@
   .flight-hud.combat .coordinates { top: 25%; }
   .flight-hud.combat .combat-stats { top: 33%; }
   .flight-hud.combat .combat-message { top: 46%; }
+}
+
+/* One solid ink: hierarchy comes from weight and size, not different hues. */
+.flight-hud.combat .mission p,
+.flight-hud.combat .mission div > span,
+.flight-hud.combat .mission-index,
+.flight-hud.combat .mission-status,
+.flight-hud.combat .coordinates,
+.flight-hud.combat .coordinates b,
+.flight-hud.combat .combat-stats,
+.flight-hud.combat .combat-stats span,
+.flight-hud.combat .combat-stats b,
+.flight-hud.combat .combat-message {
+  color: var(--vr-hud-ink, #f8fbff);
 }
