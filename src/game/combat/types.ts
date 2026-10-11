@@ -8,6 +8,8 @@ export type ColonistStatus = 'ground' | 'targeted' | 'captured' | 'extracting' |
 export interface Colonist {
   id: number; x: number; y: number; vy: number; status: ColonistStatus;
   owner: number | null; homeX: number; walkDirection: number; rescued: boolean;
+  /** Hidden inside the rescuing craft, as opposed to dangling outside it. */
+  onboard?: boolean;
 }
 export interface Enemy {
   id: number; kind: EnemyKind; x: number; y: number; vx: number; vy: number;
@@ -48,6 +50,7 @@ export interface CombatContext {
 export const COMBAT = {
   colonistX: [400, 480, 640, 820, 1080, 1430, 1790, 2160],
   gravity: 5.5, safeFallSpeed: 9, rescueRadius: 5.5, deliverySpeed: 22,
+  extractionSpeed: 5.5, extractionHorizontalSpeed: 11,
   descentSpeed: 8, liftSpeed: 5, abductionY: 83, playerRadius: 2.4, colonistRadius: 1.15,
   enemyRadius: { harvester: 3.3, wraith: 3.5, interceptor: 3, flux: 4.5, drone: 1.4, crossfire: 3.4 },
   enemyHp: { harvester: 2, wraith: 3, interceptor: 2, flux: 8, drone: 1, crossfire: 3 },
