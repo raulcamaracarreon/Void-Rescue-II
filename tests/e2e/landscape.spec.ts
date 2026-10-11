@@ -24,7 +24,7 @@ test('permite guardar varios mundos propios y agregarlos a la rotación de olead
   let prefs = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
   expect(prefs.library).toHaveLength(1);
   expect(prefs.library[0]!.name).toBe('Horizonte personal');
-  expect(prefs.library[0]!.style.automatic!.skyColor).toBe('#f04b27');
+  expect(prefs.library[0]!.style.automatic!.skyColor).toBe('#ef4d25');
   expect(prefs.cyclePool).toContain('user:' + prefs.library[0]!.id);
   expect(prefs.rotation).toBe('shuffle');
 
