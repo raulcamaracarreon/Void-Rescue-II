@@ -1,0 +1,109 @@
+name: Publicar versión estable de Void Rescue II
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: void-rescue-ii-release-v1
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Crear etiqueta, archivo ZIP y GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener el código del commit estable
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Comprobar TypeScript
+        run: npm run typecheck
+      - name: Ejecutar pruebas unitarias
+        run: npm test
+      - name: Compilar aplicación web
+        run: npm run build
+      - name: Preparar ZIP distribuible y avisos de licencia
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p 'JSON.parse(require("fs").readFileSync("package.json", "utf8")).version')
+          test "$VERSION" = "1.0.0"
+          test -f LICENSE
+          test -f THIRD_PARTY_NOTICES.md
+          test -f docs/releases/v1.0.0.md
+          test -f dist/index.html
+          test -f dist/icon.svg
+          test -d dist/assets
+          mkdir -p "$RUNNER_TEMP/void-rescue-ii-v$VERSION"
+          cp -a dist/. "$RUNNER_TEMP/void-rescue-ii-v$VERSION/"
+          cp LICENSE THIRD_PARTY_NOTICES.md "$RUNNER_TEMP/void-rescue-ii-v$VERSION/"
+          printf '{"commit":"%s","version":"%s"}\n' "$GITHUB_SHA" "$VERSION" > "$RUNNER_TEMP/void-rescue-ii-v$VERSION/version.json"
+          cat > "$RUNNER_TEMP/void-rescue-ii-v$VERSION/COMO_JUGAR.txt" <<'EOF'
+          VOID RESCUE II v1.0.0 - PAQUETE WEB
+          -----------------------------------------------------------
+          Juego en línea, sin instalar:
+          https://raulcamaracarreon.github.io/Void-Rescue-II/
+
+          Este ZIP NO es un instalador de Windows ni un paquete de Steam.
+          Para ejecutar estos archivos localmente, sirve esta carpeta
+          mediante un servidor HTTP. Por ejemplo, con Python instalado:
+
+            python -m http.server 8000
+
+          Visita: http://127.0.0.1:8000/
+
+          Licencia del código propio: LICENSE (MIT).
+          Dependencias: THIRD_PARTY_NOTICES.md.
+          EOF
+          (cd "$RUNNER_TEMP/void-rescue-ii-v$VERSION" && zip -q -r "$GITHUB_WORKSPACE/void-rescue-ii-v$VERSION-web.zip" .)
+          test -s "void-rescue-ii-v$VERSION-web.zip"
+      - name: Publicar etiqueta oficial y Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p 'JSON.parse(require("fs").readFileSync("package.json", "utf8")).version')
+          TAG="v$VERSION"
+          FILE="void-rescue-ii-$TAG-web.zip"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "La Release $TAG ya existe: no se cambia su etiqueta ni su contenido."
+          else
+            gh release create "$TAG" "$FILE" \
+              --target "$GITHUB_SHA" \
+              --title "Void Rescue II $TAG — versión estable" \
+              --notes-file "docs/releases/$TAG.md"
+          fi
+          gh release view "$TAG" --json tagName,isDraft,isPrerelease,assets,url \
+            --jq '{tag:.tagName,draft:.isDraft,prerelease:.isPrerelease,url:.url,assets:[.assets[].name]}'
+          ASSETS=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          if ! grep -Fxq "$FILE" <<< "$ASSETS"; then
+            echo "::error::No se encontró el paquete web adjunto a $TAG"
+            exit 1
+          fi
+          # The immutable public release must identify the exact commit.
+          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+            fetch --quiet origin "refs/tags/$TAG:refs/tags/$TAG"
+          RELEASE_SHA=$(git rev-list -n 1 "$TAG")
+          if [[ "$RELEASE_SHA" != "$GITHUB_SHA" ]]; then
+            echo "::error::La etiqueta $TAG apunta a $RELEASE_SHA, no a $GITHUB_SHA"
+            exit 1
+          fi
+          echo "Release oficial verificada: https://github.com/$GH_REPO/releases/tag/$TAG"
