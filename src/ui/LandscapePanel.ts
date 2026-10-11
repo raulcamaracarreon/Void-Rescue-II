@@ -1,6 +1,6 @@
 import {
-  copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS, resolveLandscape,
-  sanitizeLandscapePreferences,
+  allLandscapeChoices, copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS,
+  resolveLandscape, sanitizeLandscapePreferences,
 } from '../landscape/LandscapeConfig';
 import type {
   AutomaticLandscape, LandscapeEditorMode, LandscapeLayer, LandscapePreferences,
@@ -16,6 +16,9 @@ export class LandscapePanel {
   private readonly description: HTMLElement;
   private readonly swatches: HTMLElement;
   private preferences: LandscapePreferences;
+  private editingId: string | null = null;
+  private readonly nameInput: HTMLInputElement;
+  private readonly rotationList: HTMLElement;
 
   constructor(root: HTMLElement, initial: LandscapePreferences,
     private readonly onChange: (value: LandscapePreferences) => void,
@@ -44,6 +47,28 @@ export class LandscapePanel {
         </label>
       </div>
       <p class="landscape-description" role="status"></p>
+      <section class="landscape-library">
+        <h3>Mis paisajes</h3>
+        <p class="landscape-help">Guarda tantos paisajes como quieras. Los estilos incluidos no se sobrescriben.</p>
+        <label class="landscape-label">Nombre del paisaje
+          <input type="text" maxlength="60" class="landscape-name" aria-label="Nombre del paisaje" placeholder="Mi nuevo mundo">
+        </label>
+        <div class="landscape-buttons landscape-library-actions">
+          <button type="button" data-landscape="save-new">Guardar nuevo</button>
+          <button type="button" data-landscape="save-changes">Guardar cambios</button>
+          <button type="button" data-landscape="duplicate">Duplicar</button>
+          <button type="button" data-landscape="rename">Renombrar</button>
+          <button type="button" data-landscape="delete">Eliminar</button>
+        </div>
+        <h3>Ambientes de las oleadas</h3>
+        <label class="landscape-label">Orden de aparición
+          <select class="landscape-rotation" aria-label="Rotación de ambientes">
+            <option value="sequential">Secuencial</option>
+            <option value="shuffle">Aleatorio sin repeticiones</option>
+          </select>
+        </label>
+        <div class="landscape-rotation-list" aria-label="Ambientes incluidos en las oleadas"></div>
+      </section>
       <div class="landscape-automatic">
         <p class="landscape-help">Elige únicamente dos colores. El juego interpola los tonos de las capas, de lejos a cerca.</p>
         <div class="landscape-global">
@@ -87,9 +112,14 @@ export class LandscapePanel {
     this.layers = this.dialog.querySelector<HTMLElement>('.landscape-layers')!;
     this.description = this.dialog.querySelector<HTMLElement>('.landscape-description')!;
     this.swatches = this.dialog.querySelector<HTMLElement>('.landscape-swatches')!;
+    this.nameInput = this.dialog.querySelector<HTMLInputElement>('.landscape-name')!;
+    this.rotationList = this.dialog.querySelector<HTMLElement>('.landscape-rotation-list')!;
 
     this.selection.addEventListener('change', () => {
       this.preferences.selection = this.selection.value as LandscapeSelection;
+      this.editingId = null;
+      const saved = this.currentSaved();
+      if (saved) this.preferences.mode = saved.mode;
       this.commit();
       this.render();
     });
@@ -164,7 +194,72 @@ export class LandscapePanel {
       this.commit(); this.render();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="restore"]')!.addEventListener('click', () => {
-      this.preferences = defaultLandscapePreferences();
+      // Presets are restored, but personal library and its pool must never be wiped.
+      const previous = this.preferences;
+      this.preferences = { ...defaultLandscapePreferences(), library: previous.library,
+        cyclePool: previous.cyclePool, rotation: previous.rotation };
+      this.editingId = null;
+      this.commit(); this.render();
+    });
+    this.dialog.querySelector<HTMLSelectElement>('.landscape-rotation')!.addEventListener('change', event => {
+      this.preferences.rotation = (event.target as HTMLSelectElement).value === 'shuffle'
+        ? 'shuffle' : 'sequential';
+      this.commit(); this.render();
+    });
+    this.rotationList.addEventListener('change', event => {
+      const checkbox = event.target;
+      if (!(checkbox instanceof HTMLInputElement) || !checkbox.dataset.landscapeId) return;
+      const id = checkbox.dataset.landscapeId;
+      if (checkbox.checked && !this.preferences.cyclePool.includes(id)) this.preferences.cyclePool.push(id);
+      if (!checkbox.checked) this.preferences.cyclePool = this.preferences.cyclePool.filter(item => item !== id);
+      this.commit(); this.renderRotationList();
+    });
+    this.dialog.querySelector<HTMLButtonElement>('[data-landscape="save-new"]')!.addEventListener('click', () => {
+      const name = this.nameInput.value.trim().slice(0, 60) || `Mi paisaje ${this.preferences.library.length + 1}`;
+      const id = crypto.randomUUID();
+      if (this.preferences.library.length >= 100) { this.description.textContent = 'Máximo de 100 paisajes guardados'; return; }
+      this.preferences.library.push({
+        id, name, mode: this.preferences.mode,
+        style: copyLandscape(resolveLandscape(this.preferences, this.currentWave()).style),
+      });
+      this.preferences.selection = `user:${id}`;
+      this.editingId = null;
+      this.commit(); this.render();
+    });
+    this.dialog.querySelector<HTMLButtonElement>('[data-landscape="save-changes"]')!.addEventListener('click', () => {
+      const entry = this.currentSaved() ?? this.preferences.library.find(item => item.id === this.editingId);
+      if (!entry) return;
+      entry.style = copyLandscape(this.preferences.selection === 'custom'
+        ? this.preferences.custom : resolveLandscape(this.preferences, this.currentWave()).style);
+      entry.mode = this.preferences.mode;
+      this.preferences.selection = `user:${entry.id}`;
+      this.editingId = null;
+      this.commit(); this.render();
+    });
+    this.dialog.querySelector<HTMLButtonElement>('[data-landscape="duplicate"]')!.addEventListener('click', () => {
+      if (this.preferences.library.length >= 100) return;
+      const source = this.currentSaved();
+      const name = `${source?.name ?? resolveLandscape(this.preferences, this.currentWave()).name} (copia)`;
+      const id = crypto.randomUUID();
+      this.preferences.library.push({ id, name, mode: this.preferences.mode,
+        style: copyLandscape(resolveLandscape(this.preferences, this.currentWave()).style) });
+      this.preferences.selection = `user:${id}`;
+      this.editingId = null;
+      this.commit(); this.render();
+    });
+    this.dialog.querySelector<HTMLButtonElement>('[data-landscape="rename"]')!.addEventListener('click', () => {
+      const entry = this.currentSaved() ?? this.preferences.library.find(item => item.id === this.editingId);
+      if (!entry || !this.nameInput.value.trim()) return;
+      entry.name = this.nameInput.value.trim().slice(0, 60);
+      this.commit(); this.render();
+    });
+    this.dialog.querySelector<HTMLButtonElement>('[data-landscape="delete"]')!.addEventListener('click', () => {
+      const entry = this.currentSaved() ?? this.preferences.library.find(item => item.id === this.editingId);
+      if (!entry || !confirm(`¿Eliminar el paisaje "${entry.name}"?`)) return;
+      this.preferences.library = this.preferences.library.filter(item => item.id !== entry.id);
+      this.preferences.cyclePool = this.preferences.cyclePool.filter(item => item !== `user:${entry.id}`);
+      this.preferences.selection = 'cycle';
+      this.editingId = null;
       this.commit(); this.render();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="close"]')!.addEventListener('click', () => this.close());
@@ -206,6 +301,10 @@ export class LandscapePanel {
     }
   }
 
+  private currentSaved() {
+    return this.preferences.library.find(item => `user:${item.id}` === this.preferences.selection);
+  }
+
   private switchMode(mode: LandscapeEditorMode): void {
     if (mode === 'advanced' && this.preferences.mode === 'automatic') {
       // First switch copies the visible gradient; subsequent switches preserve hand-made layers.
@@ -225,6 +324,7 @@ export class LandscapePanel {
   private mutableStyle(): LandscapeStyle {
     if (this.preferences.selection !== 'custom') {
       const current = resolveLandscape(this.preferences, this.currentWave()).style;
+      this.editingId = this.currentSaved()?.id ?? null;
       this.preferences.custom = copyLandscape(current);
       this.preferences.custom.advancedEdited = false;
       this.preferences.selection = 'custom';
@@ -259,11 +359,37 @@ export class LandscapePanel {
     }
   }
 
+  private renderRotationList(): void {
+    this.rotationList.replaceChildren();
+    for (const item of allLandscapeChoices(this.preferences)) {
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.dataset.landscapeId = item.id;
+      checkbox.checked = this.preferences.cyclePool.includes(item.id);
+      checkbox.setAttribute('aria-label', `Incluir ${item.label} en oleadas`);
+      label.append(checkbox, document.createTextNode(item.label));
+      this.rotationList.append(label);
+    }
+  }
+
   private render(): void {
+    // Never inject user-provided names as HTML; construct text-only select options.
+    this.selection.replaceChildren(new Option('Rotación por oleada', 'cycle'));
+    for (const item of allLandscapeChoices(this.preferences))
+      this.selection.add(new Option(item.label, item.id));
+    this.selection.add(new Option('Personalizado (sin guardar)', 'custom'));
     const style = resolveLandscape(this.preferences, this.currentWave()).style;
     const automatic = style.automatic!;
     this.selection.value = this.preferences.selection;
     this.mode.value = this.preferences.mode;
+    const saved = this.currentSaved() ?? this.preferences.library.find(item => item.id === this.editingId);
+    this.nameInput.value = saved?.name ?? '';
+    for (const id of ['save-changes', 'rename', 'delete']) {
+      this.dialog.querySelector<HTMLButtonElement>(`[data-landscape="${id}"]`)!.disabled = !saved;
+    }
+    this.dialog.querySelector<HTMLSelectElement>('.landscape-rotation')!.value = this.preferences.rotation;
+    this.renderRotationList();
     this.dialog.querySelector<HTMLElement>('.landscape-automatic')!.hidden = this.preferences.mode !== 'automatic';
     this.dialog.querySelector<HTMLElement>('.landscape-advanced')!.hidden = this.preferences.mode !== 'advanced';
 
