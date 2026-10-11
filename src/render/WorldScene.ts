@@ -162,7 +162,7 @@ export class WorldScene {
   }
 
   setLandscape(preferences: LandscapePreferences, wave: number): void {
-    const { style } = resolveLandscape(preferences, wave);
+    const { style } = resolveLandscape(preferences, wave, this.seed);
     const key = JSON.stringify({ style, wave });
     if (key === this.lastLandscapeKey) return;
     this.lastLandscapeKey = key;
