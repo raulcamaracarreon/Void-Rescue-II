@@ -34,5 +34,6 @@ jobs:
           name: landscape-screenshots
           path: |
             docs/screenshots/*landscape-city.png
+            docs/screenshots/*hud-transparent.png
             test-results/**
           if-no-files-found: ignore
