@@ -24,6 +24,7 @@ export interface LandscapeStyle {
   skyTop: string;
   skyBottom: string;
   stars: boolean;
+  moon: boolean;
   seed: number;
   layers: LandscapeLayer[];
   automatic?: AutomaticLandscape;
@@ -41,7 +42,7 @@ const PRESET_ORDER: LandscapePreset[] = ['night', 'city', 'sunset', 'ice'];
 
 export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: LandscapeStyle }> = {
   night: { label: 'Noche estelar', style: {
-    skyTop: '#020509', skyBottom: '#142b3c', stars: true, seed: 11,
+    skyTop: '#020509', skyBottom: '#142b3c', stars: true, moon: true, seed: 11,
     layers: [
       { type: 'mountains', color: '#20354d', amplitude: 17, detail: 28 },
       { type: 'mountains', color: '#1a3551', amplitude: 20, detail: 41 },
@@ -50,7 +51,7 @@ export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: 
     ],
   } },
   city: { label: 'Ciudad abandonada', style: {
-    skyTop: '#060817', skyBottom: '#3c305c', stars: true, seed: 27,
+    skyTop: '#060817', skyBottom: '#3c305c', stars: true, moon: true, seed: 27,
     layers: [
       { type: 'mountains', color: '#2d2d58', amplitude: 12, detail: 29 },
       { type: 'buildings', color: '#282645', amplitude: 20, detail: 39 },
@@ -59,7 +60,7 @@ export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: 
     ],
   } },
   sunset: { label: 'Ocaso alienígena', style: {
-    skyTop: '#301938', skyBottom: '#b96a63', stars: false, seed: 43,
+    skyTop: '#301938', skyBottom: '#b96a63', stars: false, moon: false, seed: 43,
     layers: [
       { type: 'mountains', color: '#80546e', amplitude: 14, detail: 28 },
       { type: 'mountains', color: '#69445e', amplitude: 19, detail: 40 },
@@ -68,7 +69,7 @@ export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: 
     ],
   } },
   ice: { label: 'Mundo glacial', style: {
-    skyTop: '#1e4a68', skyBottom: '#77b7c6', stars: false, seed: 59,
+    skyTop: '#1e4a68', skyBottom: '#77b7c6', stars: false, moon: false, seed: 59,
     layers: [
       { type: 'mountains', color: '#74a8b9', amplitude: 22, detail: 33 },
       { type: 'mountains', color: '#4e879e', amplitude: 17, detail: 49 },
@@ -193,6 +194,8 @@ export function sanitizeLandscapeStyle(value: unknown, fallback = defaultLandsca
     skyTop: color(v.skyTop, fallback.skyTop),
     skyBottom: color(v.skyBottom, fallback.skyBottom),
     stars: typeof v.stars === 'boolean' ? v.stars : fallback.stars,
+    // Migrate older custom landscapes without a moon flag based on their stars preference.
+    moon: typeof v.moon === 'boolean' ? v.moon : typeof v.stars === 'boolean' ? v.stars : fallback.moon,
     seed: int(v.seed, 0, 999999999, fallback.seed),
     layers,
     automatic: sanitizeAutomatic(v.automatic, legacy
