@@ -84,7 +84,16 @@ export class CombatVisuals {
       if (!model || model.userData.kind !== e.kind) { if (model) this.group.remove(model); model = this.templates.get(e.kind)!.clone(); model.userData.kind = e.kind; this.entities.set(e.id, model); this.group.add(model); }
       model.position.set(x(e.x), e.y, 1); model.visible = visible(e.x);
       model.scale.setScalar(e.telegraph > 0 ? Math.max(0.1, 1 - e.telegraph / 0.65) : 1);
-      if (e.kind === 'interceptor') model.scale.x *= e.vx >= 0 ? 1 : -1;
+      if (e.kind === 'interceptor') {
+        // Turn through the ship's side rather than mirroring its silhouette in one frame.
+        const direction = e.vx >= 0 ? 1 : -1;
+        const current = typeof model.userData.heading === 'number' ? model.userData.heading as number : direction;
+        const turn = 1 - Math.exp(-5 * Math.min(0.1, Math.max(0, elapsed)));
+        const heading = current + (direction - current) * (reduced ? 1 : turn);
+        model.userData.heading = heading;
+        model.scale.x *= heading >= 0 ? 1 : -1;
+        model.rotation.y = reduced ? 0 : (1 - Math.abs(heading)) * Math.PI / 2;
+      }
       model.rotation.z = reduced ? 0 : e.kind === 'flux' ? Math.sin(e.age) * 0.1 : Math.max(-0.2, Math.min(0.2, e.vy * 0.01));
       const c = state.colonists.find(c => c.id === e.target);
       let beam = this.beams.get(e.id);
