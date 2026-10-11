@@ -172,18 +172,18 @@ export class WorldScene {
     this.landscape.rebuild(style, this.seed, wave);
   }
 
-  update(cameraX: number, viewWidth: number, missionMode: MissionMode): void {
+  update(cameraX: number, viewWidth: number, missionMode: MissionMode, reducedMotion = false): void {
     this.backdrop.position.x = cameraX;
-    this.landscape.update(cameraX);
+    this.landscape.update(cameraX, reducedMotion);
     this.sky.scale.set(viewWidth + 5, 140, 1);
-    this.moon.position.x = viewWidth * 0.24 - Math.sin(cameraX / CONFIG.worldWidth * Math.PI * 2) * 4;
+    this.moon.position.x = viewWidth * 0.24 - (reducedMotion ? 0 : Math.sin(cameraX / CONFIG.worldWidth * Math.PI * 2) * 4);
     const tileIndex = Math.floor(cameraX / CONFIG.worldWidth);
     this.terrainCopies.forEach((tile, index) => { tile.position.x = (tileIndex + index - 1) * CONFIG.worldWidth; });
     this.settlements.forEach(model => { model.position.x = nearCameraX(model.userData.worldX as number, cameraX, CONFIG.worldWidth); });
     this.fortress.visible = missionMode === 'rescue';
     this.fortress.position.x = nearCameraX(SAFE_BASE.x, cameraX, CONFIG.worldWidth);
     this.starPositions.forEach((star, i) => {
-      this.matrix.position.set(((star.x - cameraX * 0.035 + 165) % 330 + 330) % 330 - 165, star.y, star.z);
+      this.matrix.position.set(((star.x - (reducedMotion ? 0 : cameraX * 0.035) + 165) % 330 + 330) % 330 - 165, star.y, star.z);
       this.matrix.scale.setScalar(star.size);
       this.matrix.updateMatrix();
       this.stars.setMatrixAt(i, this.matrix.matrix);
