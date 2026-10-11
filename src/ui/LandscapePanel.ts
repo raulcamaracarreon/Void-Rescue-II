@@ -211,8 +211,24 @@ export class LandscapePanel {
       const checkbox = event.target;
       if (!(checkbox instanceof HTMLInputElement) || !checkbox.dataset.landscapeId) return;
       const id = checkbox.dataset.landscapeId;
+      if (!checkbox.checked && this.preferences.cyclePool.length === 1) {
+        checkbox.checked = true; // Keep at least one environment available.
+        return;
+      }
       if (checkbox.checked && !this.preferences.cyclePool.includes(id)) this.preferences.cyclePool.push(id);
       if (!checkbox.checked) this.preferences.cyclePool = this.preferences.cyclePool.filter(item => item !== id);
+      this.commit(); this.renderRotationList();
+    });
+    this.rotationList.addEventListener('click', event => {
+      const target = event.target;
+      if (!(target instanceof HTMLButtonElement)) return;
+      const id = target.dataset.landscapeId, direction = target.dataset.move;
+      if (!id || !direction) return;
+      const from = this.preferences.cyclePool.indexOf(id);
+      const to = from + (direction === 'up' ? -1 : 1);
+      if (from < 0 || to < 0 || to >= this.preferences.cyclePool.length) return;
+      [this.preferences.cyclePool[from], this.preferences.cyclePool[to]] =
+        [this.preferences.cyclePool[to]!, this.preferences.cyclePool[from]!];
       this.commit(); this.renderRotationList();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="save-new"]')!.addEventListener('click', () => {
@@ -362,15 +378,42 @@ export class LandscapePanel {
 
   private renderRotationList(): void {
     this.rotationList.replaceChildren();
-    for (const item of allLandscapeChoices(this.preferences)) {
+    const all = allLandscapeChoices(this.preferences);
+    const order = new Map(this.preferences.cyclePool.map((id, index) => [id, index]));
+    // Checked entries lead in their actual playback order, unchecked entries follow.
+    all.sort((a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity));
+    for (const item of all) {
+      const row = document.createElement('div');
+      row.className = 'landscape-rotation-row';
       const label = document.createElement('label');
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.dataset.landscapeId = item.id;
-      checkbox.checked = this.preferences.cyclePool.includes(item.id);
+      checkbox.checked = order.has(item.id);
       checkbox.setAttribute('aria-label', `Incluir ${item.label} en oleadas`);
-      label.append(checkbox, document.createTextNode(item.label));
-      this.rotationList.append(label);
+      const style = resolveLandscape({
+        ...this.preferences, selection: item.id as LandscapeSelection,
+      }, this.currentWave(), this.currentSeed()).style;
+      const swatch = document.createElement('span');
+      swatch.className = 'landscape-tiny-swatch';
+      swatch.style.background = `linear-gradient(${style.skyTop}, ${style.layers.at(-1)!.color})`;
+      label.append(checkbox, swatch, document.createTextNode(item.label));
+      row.append(label);
+      const index = order.get(item.id);
+      if (index !== undefined) {
+        for (const [direction, symbol] of [['up', '↑'], ['down', '↓']] as const) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = symbol;
+          button.dataset.move = direction;
+          button.dataset.landscapeId = item.id;
+          button.setAttribute('aria-label', `${direction === 'up' ? 'Subir' : 'Bajar'} ${item.label}`);
+          button.disabled = direction === 'up' ? index === 0
+            : index === this.preferences.cyclePool.length - 1;
+          row.append(button);
+        }
+      }
+      this.rotationList.append(row);
     }
   }
 
