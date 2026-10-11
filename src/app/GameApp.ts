@@ -84,10 +84,11 @@ export class GameApp {
       result: () => this.continueResult(), pilot: value => this.records.setPilot(value),
       records: () => { this.setPaused(true); this.saveRecord(); this.recordsPanel.show(); },
     }, this.preferences, this.records.pilot);
-    this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave).style);
+    this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave, this.simulation.state.seed).style);
     this.controllerPanel = new ControllerPanel(root, this.input.controller, () => { this.input.clear(); });
     this.landscapePanel = new LandscapePanel(root, this.landscapePreferences,
-      value => this.saveLandscape(value), () => this.simulation.state.wave);
+      value => this.saveLandscape(value), () => this.simulation.state.wave,
+      () => this.simulation.state.seed);
     this.recordsPanel = new RecordsPanel(root, this.records, () => { this.input.clear(); },
       () => ({ spawnMode: this.preferences.spawnMode, missionMode: this.preferences.missionMode }));
     this.audio.setMuted(this.preferences.muted);
@@ -227,7 +228,7 @@ export class GameApp {
   private saveLandscape(preferences: LandscapePreferences): void {
     this.landscapePreferences = sanitizeLandscapePreferences(preferences);
     this.graphics.setLandscape(this.landscapePreferences, this.simulation.state.wave);
-    this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave).style);
+    this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave, this.simulation.state.seed).style);
     try { localStorage.setItem(LANDSCAPE_SETTINGS_KEY, JSON.stringify(this.landscapePreferences)); }
     catch { /* Visual settings remain usable for the current session. */ }
   }
@@ -267,7 +268,7 @@ export class GameApp {
     if (this.simulation.nextWave()) {
       this.unlockAudio(); this.audio.resetEvents(); this.lastTeleport = 0;
       this.graphics.reset(this.simulation.state, false);
-      this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave).style);
+      this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave, this.simulation.state.seed).style);
       this.setMode('playing');
     } else this.restart();
   }
@@ -296,7 +297,7 @@ export class GameApp {
         for (let i = 0; i < frames; i++) this.simulation.update(this.clock.dt, IDLE_INPUT);
       },
       getMetrics: () => ({ ...this.graphics.metrics(), seed: this.simulation.state.seed,
-        landscape: resolveLandscape(this.landscapePreferences, this.simulation.state.wave).name,
+        landscape: resolveLandscape(this.landscapePreferences, this.simulation.state.wave, this.simulation.state.seed).name,
         scenario: this.simulation.state.scenario, simulationHz: 60, frame: this.simulation.state.frame,
         entities: { player: Number(this.simulation.state.player.alive), enemies: this.simulation.state.enemies.length,
           colonists: this.simulation.state.colonists.filter(c => c.status !== 'lost').length, projectiles: this.simulation.state.shots.length,

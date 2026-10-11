@@ -3,12 +3,89 @@ import { CONFIG } from '../../src/game/config';
 import {
   copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS, landscapeVisualSeed,
   mixLandscapeColors,
-  resolveLandscape, sanitizeLandscapePreferences,
+  resolveLandscape, sanitizeLandscapePreferences, PRESET_ORDER, landscapeForWave, allLandscapeChoices,
 } from '../../src/landscape/LandscapeConfig';
 import { landscapeSilhouette, parallaxFactor, parallaxOffset } from '../../src/landscape/LandscapeMath';
 import { ParallaxLandscape } from '../../src/render/ParallaxLandscape';
 
 describe('paisajes procedurales', () => {
+  it('incluye 13 mundos y conserva colores extremos de las tres referencias', () => {
+    expect(PRESET_ORDER).toHaveLength(13);
+    for (const id of PRESET_ORDER) {
+      const preset = LANDSCAPE_PRESETS[id];
+      expect(preset).toBeDefined();
+      const p = defaultLandscapePreferences();
+      p.selection = id;
+      const first = resolveLandscape(p, 1).style;
+      expect(first.layers).toHaveLength(6);
+      expect(first.layers.at(-1)!.color).toBe(first.automatic!.frontColor);
+    }
+    const p = defaultLandscapePreferences();
+    for (const [id, sky, foreground] of [
+      ['martian_dusk', '#ef4d25', '#482a0f'],
+      ['polar_overcast', '#fafafa', '#46527c'],
+      ['strange_planet', '#f92fc3', '#481043'],
+    ]) {
+      p.selection = id as typeof p.selection;
+      const style = resolveLandscape(p, 3).style;
+      expect(style.skyTop).toBe(sky);
+      expect(style.layers.at(-1)!.color).toBe(foreground);
+    }
+  });
+
+  it('rota cualquier subconjunto de presets y guardados, sin repetir dentro de cada ciclo', () => {
+    const p = defaultLandscapePreferences();
+    p.library.push({
+      id: 'esmeralda-1', name: 'Planeta Esmeralda', mode: 'automatic',
+      style: copyLandscape(p.custom),
+    });
+    p.cyclePool = ['night', 'martian_dusk', 'user:esmeralda-1', 'polar_overcast'];
+    expect(allLandscapeChoices(p).at(-1)?.label).toBe('Planeta Esmeralda');
+    expect([1, 2, 3, 4, 5].map(w => landscapeForWave(p, w, 8042)))
+      .toEqual(['night', 'martian_dusk', 'user:esmeralda-1', 'polar_overcast', 'night']);
+    p.rotation = 'shuffle';
+    const first = Array.from({ length: 4 }, (_, i) => landscapeForWave(p, i + 1, 8042));
+    const second = Array.from({ length: 4 }, (_, i) => landscapeForWave(p, i + 5, 8042));
+    expect(new Set(first).size).toBe(4);
+    expect(new Set(second).size).toBe(4);
+    expect(first.at(-1)).not.toBe(second[0]);
+    expect(first).toEqual(Array.from({ length: 4 }, (_, i) => landscapeForWave(p, i + 1, 8042)));
+    p.selection = 'cycle';
+    expect([1, 2, 3, 4].map(w => resolveLandscape(p, w, 8042).name))
+      .toEqual(first.map(id => id.startsWith('user:') ? 'Planeta Esmeralda'
+        : LANDSCAPE_PRESETS[id as keyof typeof LANDSCAPE_PRESETS].label));
+  });
+
+  it('migra preferencias anteriores y valida biblioteca y rotación malformadas', () => {
+    const legacy = { selection: 'custom', mode: 'advanced', custom: {
+      skyTop: '#456789', skyBottom: '#456789', seed: 55, stars: true,
+      layers: LANDSCAPE_PRESETS.night.style.layers,
+    }};
+    const restored = sanitizeLandscapePreferences(legacy);
+    expect(restored.selection).toBe('custom');
+    expect(restored.custom.skyTop).toBe('#456789');
+    expect(restored.library).toEqual([]);
+    expect(restored.cyclePool).toHaveLength(13);
+    const p = defaultLandscapePreferences();
+    p.library.push({ id: 'abc', name: '    Mi paisaje  ', mode: 'advanced',
+      style: { ...copyLandscape(p.custom), skyTop: '#aabbcc' } });
+    p.selection = 'user:abc';
+    p.cyclePool = ['night', 'user:abc', 'user:abc', 'invalid', '__proto__'];
+    const clean = sanitizeLandscapePreferences(p);
+    expect(clean.cyclePool).toEqual(['night', 'user:abc']);
+    expect(clean.library[0]!.name).toBe('Mi paisaje');
+    expect(resolveLandscape(clean, 6).style.skyTop).toBe('#aabbcc');
+    clean.library[0]!.style.skyTop = '#112233';
+    expect(p.library[0]!.style.skyTop).toBe('#aabbcc');
+    const invalid = sanitizeLandscapePreferences({ selection: 'user:missing',
+      library: [{ id: '../evil', name: '<script>alert(1)</script>' }],
+      cyclePool: ['user:missing'] });
+    expect(invalid.selection).toBe('cycle');
+    expect(invalid.library).toHaveLength(0);
+    expect(landscapeForWave(invalid, 2)).toBe('night');
+  });
+
+
   it('interpola RGB como el generador original, dejando la última capa idéntica al color frontal', () => {
     const sky = '#96dbef', front = '#164c78';
     expect(mixLandscapeColors(sky, front, 0)).toBe(sky);
@@ -60,7 +137,7 @@ describe('paisajes procedurales', () => {
   it('alterna ambientes por oleada sin cambiar la paleta configurada', () => {
     const preferences = defaultLandscapePreferences();
     expect([1, 2, 3, 4, 5].map(wave => resolveLandscape(preferences, wave).name))
-      .toEqual(['Noche estelar', 'Ciudad abandonada', 'Ocaso alienígena', 'Mundo glacial', 'Noche estelar']);
+      .toEqual(['Noche estelar', 'Ciudad abandonada', 'Ocaso alienígena', 'Mundo glacial', 'Mundo volcánico']);
     expect(resolveLandscape(preferences, 1).style.stars).toBe(true);
     expect(resolveLandscape(preferences, 1).style.moon).toBe(true);
     expect(resolveLandscape(preferences, 3).style.moon).toBe(false);

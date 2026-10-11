@@ -101,3 +101,11 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - [x] Modo Defensivo y ambos sistemas Clásico/Dinámico preservados.
 - [x] HUD más compacto y monocromático, sin sombras, placas ni contornos.
 - [x] TypeScript, build, **96 pruebas unitarias y 20 pruebas Playwright** en ambos motores aprobados. No equivale a comprobar el balance con el mando físico.
+
+## Biblioteca de paisajes y presets (octubre 2026)
+
+- [x] Añadir nueve nuevos presets hasta un total de 13, incluidos Ocaso Marciano, Nublado Polar y Planeta extraño con gradientes inspirados en referencias del usuario.
+- [x] Biblioteca local con entradas `id`, `name`, `style`, `mode` y operaciones guardar, sobrescribir, duplicar, renombrar y eliminar. Máximo razonable de 100 entradas para proteger el almacenamiento.
+- [x] Rotación mixta con `cyclePool` explícito, orden secuencial o mezcla determinista por partida/bloque sin repetición dentro de una tanda ni entre tandas contiguas.
+- [x] Migración de preferencias v1: conservar `custom` como borrador y dar acceso a guardarlo con nombre. Validación de IDs, colores y capas; los nombres se representan como texto, no HTML.
+- [ ] Pruebas de compilación, navegador y evaluación visual en equipo real; revisar el balance cromático de los nueve nuevos ambientes.

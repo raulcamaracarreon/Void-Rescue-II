@@ -1,8 +1,11 @@
 import { Random } from '../core/Random';
 
 export type LandscapeLayerKind = 'mountains' | 'buildings';
-export type LandscapePreset = 'night' | 'city' | 'sunset' | 'ice';
-export type LandscapeSelection = 'cycle' | LandscapePreset | 'custom';
+export type LandscapePreset = 'night' | 'city' | 'sunset' | 'ice' | 'volcanic' | 'toxic_swamp'
+  | 'copper_desert' | 'neon_megacity' | 'ash_world' | 'amethyst_planet'
+  | 'martian_dusk' | 'polar_overcast' | 'strange_planet';
+export type LandscapeSelection = 'cycle' | LandscapePreset | 'custom' | `user:${string}`;
+export type LandscapeRotation = 'sequential' | 'shuffle';
 export type LandscapeEditorMode = 'automatic' | 'advanced';
 export type LandscapeComposition = 'mountains' | 'buildings' | 'mixed';
 
@@ -31,14 +34,39 @@ export interface LandscapeStyle {
   advancedEdited?: boolean;
 }
 
+export interface SavedLandscape {
+  id: string;
+  name: string;
+  mode: LandscapeEditorMode;
+  style: LandscapeStyle;
+}
 export interface LandscapePreferences {
   selection: LandscapeSelection;
   mode: LandscapeEditorMode;
   custom: LandscapeStyle;
+  library: SavedLandscape[];
+  cyclePool: string[];
+  rotation: LandscapeRotation;
 }
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
-const PRESET_ORDER: LandscapePreset[] = ['night', 'city', 'sunset', 'ice'];
+export const PRESET_ORDER: LandscapePreset[] = [
+  'night', 'city', 'sunset', 'ice', 'volcanic', 'toxic_swamp', 'copper_desert',
+  'neon_megacity', 'ash_world', 'amethyst_planet', 'martian_dusk',
+  'polar_overcast', 'strange_planet',
+];
+function makePreset(sky: string, front: string, composition: LandscapeComposition,
+  seed: number, stars = false, moon = false): LandscapeStyle {
+  return {
+    skyTop: sky, skyBottom: sky, seed, stars, moon,
+    automatic: { skyColor: sky, frontColor: front, layerCount: 6, composition },
+    layers: Array.from({ length: 6 }, (_, index) => ({
+      type: composition === 'mixed' ? index % 3 === 2 ? 'buildings' : 'mountains' : composition,
+      color: mixLandscapeColors(sky, front, (index + 1) / 6),
+      amplitude: Math.round(6 + 20 * index / 5), detail: Math.round(12 + 73 * index / 5),
+    })),
+  };
+}
 
 export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: LandscapeStyle }> = {
   night: { label: 'Noche estelar', style: {
@@ -77,6 +105,16 @@ export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: 
       { type: 'mountains', color: '#1c425c', amplitude: 10, detail: 76 },
     ],
   } },
+  volcanic: { label: 'Mundo volcánico', style: makePreset('#f87c26', '#361714', 'mountains', 73) },
+  toxic_swamp: { label: 'Pantano tóxico', style: makePreset('#c6f566', '#143c37', 'mixed', 87) },
+  copper_desert: { label: 'Desierto de cobre', style: makePreset('#f5d5a0', '#794127', 'mountains', 101) },
+  neon_megacity: { label: 'Metrópolis neón', style: makePreset('#3355ae', '#170f51', 'buildings', 115, true) },
+  ash_world: { label: 'Mundo de cenizas', style: makePreset('#a3a7ac', '#272b35', 'mixed', 129) },
+  amethyst_planet: { label: 'Planeta amatista', style: makePreset('#bd9be2', '#402165', 'mountains', 143) },
+  // User-provided references: orange/red Martian, foggy polar blue-gray and magenta alien.
+  martian_dusk: { label: 'Ocaso Marciano', style: makePreset('#ef4d25', '#482a0f', 'mixed', 157) },
+  polar_overcast: { label: 'Nublado Polar', style: makePreset('#fafafa', '#46527c', 'mixed', 171) },
+  strange_planet: { label: 'Planeta extraño', style: makePreset('#f92fc3', '#481043', 'mixed', 185) },
 };
 
 /** RGB interpolation matches the original Landscape Generator's mix(a,b,t) exactly. */
@@ -95,6 +133,15 @@ const AUTO_PRESETS: Record<LandscapePreset, AutomaticLandscape> = {
   city: { skyColor: '#1d2947', frontColor: '#0a142c', layerCount: 6, composition: 'mixed' },
   sunset: { skyColor: '#e6a0a0', frontColor: '#422b56', layerCount: 6, composition: 'mixed' },
   ice: { skyColor: '#96dbef', frontColor: '#164c78', layerCount: 6, composition: 'mountains' },
+  volcanic: { skyColor: '#f87c26', frontColor: '#361714', layerCount: 6, composition: 'mountains' },
+  toxic_swamp: { skyColor: '#c6f566', frontColor: '#143c37', layerCount: 6, composition: 'mixed' },
+  copper_desert: { skyColor: '#f5d5a0', frontColor: '#794127', layerCount: 6, composition: 'mountains' },
+  neon_megacity: { skyColor: '#3355ae', frontColor: '#170f51', layerCount: 6, composition: 'buildings' },
+  ash_world: { skyColor: '#a3a7ac', frontColor: '#272b35', layerCount: 6, composition: 'mixed' },
+  amethyst_planet: { skyColor: '#bd9be2', frontColor: '#402165', layerCount: 6, composition: 'mountains' },
+  martian_dusk: { skyColor: '#ef4d25', frontColor: '#482a0f', layerCount: 6, composition: 'mixed' },
+  polar_overcast: { skyColor: '#fafafa', frontColor: '#46527c', layerCount: 6, composition: 'mixed' },
+  strange_planet: { skyColor: '#f92fc3', frontColor: '#481043', layerCount: 6, composition: 'mixed' },
 };
 
 export function copyLandscape(style: LandscapeStyle): LandscapeStyle {
@@ -135,22 +182,72 @@ export function defaultLandscapePreferences(): LandscapePreferences {
     selection: 'cycle',
     mode: 'automatic',
     custom: { ...copyLandscape(LANDSCAPE_PRESETS.night.style), automatic: copyAutomatic(AUTO_PRESETS.night), advancedEdited: false },
+    library: [],
+    cyclePool: [...PRESET_ORDER],
+    rotation: 'sequential',
   };
 }
 
-export function resolveLandscape(preferences: LandscapePreferences, wave: number): { name: string; style: LandscapeStyle } {
-  const selection = preferences.selection;
-  const preset = selection === 'cycle'
-    ? PRESET_ORDER[((Math.max(1, Math.floor(wave)) - 1) % PRESET_ORDER.length + PRESET_ORDER.length) % PRESET_ORDER.length]!
-    : selection;
-  if (preset === 'custom') {
+export function isSavedLandscapeId(id: string): boolean {
+  return /^user:[a-zA-Z0-9_-]{1,64}$/.test(id);
+}
+
+export function allLandscapeChoices(preferences: LandscapePreferences): { id: string; label: string }[] {
+  return [
+    ...PRESET_ORDER.map(id => ({ id, label: LANDSCAPE_PRESETS[id].label })),
+    ...preferences.library.map(item => ({ id: `user:${item.id}`, label: item.name })),
+  ];
+}
+
+function shuffleCycle(pool: string[], seed: number, cycle: number): string[] {
+  const result = [...pool];
+  const generator = new Random((seed ^ Math.imul(cycle + 1, 0x9e3779b9) ^ 0x43bc157a) >>> 0);
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(generator.next() * (i + 1));
+    [result[i], result[j]] = [result[j]!, result[i]!];
+  }
+  if (cycle > 0 && result.length > 1) {
+    const previous = shuffleCycle(pool, seed, cycle - 1).at(-1);
+    if (result[0] === previous) {
+      const swap = result.findIndex(id => id !== previous);
+      [result[0], result[swap]] = [result[swap]!, result[0]!];
+    }
+  }
+  return result;
+}
+
+/** Every landscape appears once per cycle. The shuffle uses game seed and block number,
+ * never simulation RNG, and prevents duplicates between consecutive blocks. */
+export function landscapeForWave(preferences: LandscapePreferences, wave: number, gameSeed = 0): string {
+  const valid = new Set(allLandscapeChoices(preferences).map(choice => choice.id));
+  const pool = preferences.cyclePool.filter(id => valid.has(id));
+  // If everything is unchecked, keep a safe first preset without modifying saved settings.
+  if (pool.length === 0) return 'night';
+  const n = Math.max(1, Math.floor(wave)) - 1;
+  const cycle = Math.floor(n / pool.length), index = n % pool.length;
+  return preferences.rotation === 'shuffle' ? shuffleCycle(pool, gameSeed, cycle)[index]! : pool[index]!;
+}
+
+export function resolveLandscape(preferences: LandscapePreferences, wave: number, gameSeed = 0): { name: string; style: LandscapeStyle } {
+  const selected = preferences.selection === 'cycle'
+    ? landscapeForWave(preferences, wave, gameSeed) : preferences.selection;
+  if (selected === 'custom') {
     const custom = copyLandscape(preferences.custom);
     return { name: 'Personalizado', style: preferences.mode === 'automatic'
       ? buildAutomaticLandscape(custom, custom.automatic ?? AUTO_PRESETS.night) : custom };
   }
-  const source = { ...copyLandscape(LANDSCAPE_PRESETS[preset].style), automatic: copyAutomatic(AUTO_PRESETS[preset]) };
-  return { name: LANDSCAPE_PRESETS[preset].label, style: preferences.mode === 'automatic'
-    ? buildAutomaticLandscape(source, AUTO_PRESETS[preset]) : source };
+  if (isSavedLandscapeId(selected)) {
+    const saved = preferences.library.find(item => `user:${item.id}` === selected);
+    if (saved) {
+      const style = copyLandscape(saved.style);
+      return { name: saved.name, style: saved.mode === 'automatic'
+        ? buildAutomaticLandscape(style, style.automatic ?? AUTO_PRESETS.night) : style };
+    }
+  }
+  const key = Object.hasOwn(LANDSCAPE_PRESETS, selected) ? selected as LandscapePreset : 'night';
+  const source = { ...copyLandscape(LANDSCAPE_PRESETS[key].style), automatic: copyAutomatic(AUTO_PRESETS[key]) };
+  return { name: LANDSCAPE_PRESETS[key].label, style: preferences.mode === 'automatic'
+    ? buildAutomaticLandscape(source, AUTO_PRESETS[key]) : source };
 }
 
 function color(value: unknown, fallback: string): string {
@@ -215,15 +312,38 @@ export function sanitizeLandscapePreferences(value: unknown): LandscapePreferenc
   const defaults = defaultLandscapePreferences();
   if (!value || typeof value !== 'object' || Array.isArray(value)) return defaults;
   const v = value as Record<string, unknown>;
+  const rawLibrary = Array.isArray(v.library) ? v.library.slice(0, 100) : [];
+  const seen = new Set<string>();
+  const library: SavedLandscape[] = [];
+  for (const item of rawLibrary) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+    const entry = item as Record<string, unknown>;
+    const id = typeof entry.id === 'string' && isSavedLandscapeId(`user:${entry.id}`) ? entry.id : '';
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    library.push({
+      id,
+      name: typeof entry.name === 'string' && entry.name.trim()
+        ? entry.name.trim().slice(0, 60) : 'Paisaje sin nombre',
+      mode: entry.mode === 'advanced' ? 'advanced' : 'automatic',
+      style: sanitizeLandscapeStyle(entry.style),
+    });
+  }
+  const valid = new Set<string>([...PRESET_ORDER, ...library.map(item => `user:${item.id}`)]);
+  const pool = Array.isArray(v.cyclePool) ? v.cyclePool.filter(
+    (id): id is string => typeof id === 'string' && valid.has(id)) : [...PRESET_ORDER];
+  const cyclePool = [...new Set(pool)];
   const selection = v.selection;
+  const accepted = selection === 'cycle' || selection === 'custom'
+    || (typeof selection === 'string' && valid.has(selection));
   return {
-    selection: selection === 'cycle' || selection === 'custom' ||
-      (typeof selection === 'string' && Object.hasOwn(LANDSCAPE_PRESETS, selection))
-        ? selection as LandscapeSelection : defaults.selection,
-    // Old custom palettes stay in advanced mode so user work is preserved.
+    selection: accepted ? selection as LandscapeSelection : defaults.selection,
     mode: v.mode === 'automatic' || v.mode === 'advanced' ? v.mode
       : v.selection === 'custom' ? 'advanced' : defaults.mode,
     custom: sanitizeLandscapeStyle(v.custom),
+    library,
+    cyclePool,
+    rotation: v.rotation === 'shuffle' ? 'shuffle' : 'sequential',
   };
 }
 
