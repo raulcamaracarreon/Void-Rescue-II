@@ -10,6 +10,8 @@ import type { Difficulty } from '../game/Difficulty';
 import { INITIALS } from '../game/Records';
 import { MISSION_MODES } from '../game/MissionMode';
 import type { MissionMode } from '../game/MissionMode';
+import { adaptivePalette } from '../landscape/AdaptivePalette';
+import type { LandscapeStyle } from '../landscape/LandscapeConfig';
 
 export type AppMode = 'title' | 'playing' | 'paused' | 'result';
 export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode }
@@ -161,6 +163,16 @@ export class Interface {
     this.muteButton.textContent = muted ? 'AUDIO OFF' : 'AUDIO ON';
     this.muteButton.setAttribute('aria-label', muted ? 'Activar audio' : 'Silenciar audio');
     this.muteButton.setAttribute('aria-pressed', String(muted));
+  }
+
+  setLandscapeTheme(style: LandscapeStyle): void {
+    const theme = adaptivePalette(style);
+    this.hud.style.setProperty('--vr-hud-primary', theme.primary);
+    this.hud.style.setProperty('--vr-hud-secondary', theme.secondary);
+    this.hud.style.setProperty('--vr-hud-accent', theme.accent);
+    this.hud.style.setProperty('--vr-hud-warning', theme.warning);
+    this.hud.style.setProperty('--vr-hud-plate', theme.plate);
+    this.hud.style.setProperty('--vr-hud-outline', theme.outline);
   }
 
   toggleDiagnostics(): void { this.debugVisible = !this.debugVisible; this.diagnostics.hidden = !this.debugVisible; }
