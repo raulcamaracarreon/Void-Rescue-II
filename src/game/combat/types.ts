@@ -12,6 +12,9 @@ export interface Enemy {
   id: number; kind: EnemyKind; x: number; y: number; vx: number; vy: number;
   hp: number; hitsRemaining: number; target: number | null; phase: 'seek' | 'descend' | 'lift' | 'hunt';
   cooldown: number; age: number; telegraph: number;
+  /** Interceptors and Crossfire commit to a flyby before re-evaluating the target side. */
+  flybyDirection?: -1 | 1;
+  flybySeconds?: number;
 }
 export type EventKind = 'spawn' | 'capture' | 'extraction' | 'falling' | 'landing' | 'rescue' | 'delivery' | 'lost' | 'mutation'
   | 'explosion' | 'impact' | 'bomb-charge' | 'bomb' | 'portal' | 'player-hit' | 'respawn' | 'victory' | 'defeat';
