@@ -54,7 +54,7 @@ export class GameApp {
   private readonly landscapePanel: LandscapePanel;
   private readonly records = new Records();
   private readonly recordsPanel: RecordsPanel;
-  private run: Pick<PlayerRecord, 'id' | 'pilot' | 'difficulty' | 'missionMode' | 'date'> | null = null;
+  private run: Pick<PlayerRecord, 'id' | 'pilot' | 'difficulty' | 'missionMode' | 'spawnMode' | 'date'> | null = null;
   private mode: AppMode = 'title';
   private preferences = readPreferences();
   private landscapePreferences = readLandscapePreferences();
@@ -86,7 +86,8 @@ export class GameApp {
     this.controllerPanel = new ControllerPanel(root, this.input.controller, () => { this.input.clear(); });
     this.landscapePanel = new LandscapePanel(root, this.landscapePreferences,
       value => this.saveLandscape(value), () => this.simulation.state.wave);
-    this.recordsPanel = new RecordsPanel(root, this.records, () => { this.input.clear(); });
+    this.recordsPanel = new RecordsPanel(root, this.records, () => { this.input.clear(); },
+      () => ({ spawnMode: this.preferences.spawnMode, missionMode: this.preferences.missionMode }));
     this.audio.setMuted(this.preferences.muted);
     this.audio.setVolume(this.preferences.volume);
     window.addEventListener('blur', this.onBlur);
@@ -144,7 +145,7 @@ export class GameApp {
     if (teleport) { this.lastTeleport = teleport.id; this.graphics.reset(state, false); }
     if (state.enabled && state.outcome !== 'active' && this.mode === 'playing') {
       this.saveRecord();
-      const rank = this.run ? this.records.list().findIndex(record => record.id === this.run!.id) + 1 : 0;
+      const rank = this.run ? this.records.list(this.run?.spawnMode, this.run?.missionMode).findIndex(record => record.id === this.run!.id) + 1 : 0;
       this.ui.recordStatus(this.run && state.score === 0 ? 'Sin puntos registrados. ¡Inténtalo otra vez!' : this.run
         ? `${this.run.pilot} · ${rank ? `Puesto ${rank}/10 · ${this.records.persistent ? 'Guardado' : 'Solo esta sesión'}` : 'Fuera del top 10'} · ${DIFFICULTIES[this.run.difficulty].label} (mínima usada)`
         : 'Práctica de diagnóstico · no registra récords');
@@ -178,7 +179,8 @@ export class GameApp {
 
   start(): void {
     this.saveRecord();
-    this.run = { id: crypto.randomUUID(), pilot: this.records.pilot, difficulty: this.preferences.difficulty, missionMode: this.preferences.missionMode, date: new Date().toISOString() };
+    this.run = { id: crypto.randomUUID(), pilot: this.records.pilot, difficulty: this.preferences.difficulty,
+      missionMode: this.preferences.missionMode, spawnMode: this.preferences.spawnMode, date: new Date().toISOString() };
     this.unlockAudio();
     this.simulation = new Simulation(this.simulation.state.seed,
       this.preferences.spawnMode === 'dynamic' ? 'dynamic-basic' : 'combat-basic',
