@@ -20,6 +20,9 @@ test('permite guardar varios mundos propios y agregarlos a la rotación de olead
   await dialog.getByRole('button', { name: 'Guardar nuevo' }).click();
   await expect(style).toHaveValue(/user:/);
   await dialog.getByRole('checkbox', { name: 'Incluir Horizonte personal en oleadas' }).check();
+  await dialog.getByRole('button', { name: 'Subir Horizonte personal' }).click();
+  const ordered = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
+  expect(ordered.cyclePool.at(-2)).toBe('user:' + ordered.library[0]!.id);
   await dialog.getByRole('combobox', { name: 'Rotación de ambientes' }).selectOption('shuffle');
   let prefs = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
   expect(prefs.library).toHaveLength(1);
