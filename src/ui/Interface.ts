@@ -295,7 +295,7 @@ export class Interface {
       : state.colonists.some(c => c.status === 'falling') ? 'COLONO EN CAÍDA · Busca ↓ en el radar y atrápalo'
       : event && messages[event.kind] ? messages[event.kind]!
       : state.missionMode === 'rescue' && state.colonists.some(c => c.status === 'ground')
-        ? `MODO RESCATISTA · ${gamepad ? 'NORTE Y/△' : 'E'} sobre un colono para extraerlo`
+        ? `MODO RESCATISTA · Mantén ${gamepad ? 'Y/△' : 'E'} sobre los colonos para subirlos a bordo`
       : state.portal.ready ? `PORTAL LISTO · ${gamepad ? 'NORTE Y/△' : 'E'} cerca del anillo para saltar`
       : dynamic && state.missionMode === 'defense' ? `DEFENSA POR ZONAS · ${remaining}s · ${live}/${goal.minimum} supervivientes`
          : 'PROTEGE A LOS COLONOS · Usa el radar para localizar capturas';
