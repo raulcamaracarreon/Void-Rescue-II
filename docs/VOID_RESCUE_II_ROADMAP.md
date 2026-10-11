@@ -1,6 +1,6 @@
 # Void Rescue II — hoja de ruta inicial
 
-**Estado:** objetivos 1 y 2 integrados en `main` (PR #3, #4 y #10); balance visual y jugable pendiente. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
+**Estado:** objetivos 1 y 2 integrados en `main` (PR #3, #4, #10 y #11); balance visual y jugable pendiente. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
 
 ## Principio de diseño
 
@@ -92,3 +92,12 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - [ ] Prueba de regresión integral de todos los flujos E2E y balance/dificultad en equipo real.
 
 **Importante:** los enemigos continúan apareciendo *durante la oleada*. Una oleada termina por el objetivo de la misión, no por la cantidad de enemigos; sigue habiendo un número finito de colonos y, en Defensivo, un reloj finito.
+
+## Rescate múltiple y haz mantenido — PR #11 (11-10-2026)
+
+- [x] Extraer con **E** o **Y/△** mantenido; velocidad ascendente constante (5.5 u/s), alineación horizontal limitada y cancelación por liberación temprana del botón, separación excesiva o destrucción del jugador.
+- [x] El colono entra en la nave al completar la subida; hasta ocho pasajeros `carried + onboard` sin mostrar modelos colgantes, indicados por `A BORDO n/8` en el HUD.
+- [x] Recogidas sucesivas en un mismo trayecto sin vaciar la bodega, entregas conjuntas en Fortaleza 01; caída recuperable de pasajeros al destruirse la nave.
+- [x] Modo Defensivo y ambos sistemas Clásico/Dinámico preservados.
+- [x] HUD más compacto y monocromático, sin sombras, placas ni contornos.
+- [x] TypeScript, build, **96 pruebas unitarias y 20 pruebas Playwright** en ambos motores aprobados. No equivale a comprobar el balance con el mando físico.
