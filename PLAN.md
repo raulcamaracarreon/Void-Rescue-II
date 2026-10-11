@@ -229,3 +229,15 @@ Solicitud explícita del usuario: extender la difusión de partículas de explos
 ## Corrección — velocidad de expansión de partículas (2026-09-10)
 
 El usuario aclara que la duración no era el defecto: las partículas alcanzaban su radio demasiado pronto. Se reajusta la curva de radio para abrirse lentamente durante los tres segundos completos, con vidas de partícula suficientes para que la cola siga siendo visible.
+
+
+## Void Rescue II — objetivo 1: paisajes con paralaje (2026-10-11)
+
+Desarrollo aislado en `feat/parallax-landscapes` del nuevo repositorio `Void-Rescue-II`. Esta línea no modifica Void Rescue I.
+
+- Implementado: cuatro estilos visuales, selección automática por oleada o fija, estilo personalizado con 2–10 capas, edificios/montañas, colores individuales, cielo de dos tonos, estrellas, amplitud, detalle y semilla.
+- Integración: geometría visual Three.js creada una vez por edición/oleada, costura periódica en el mundo circular; no altera `Terrain` ni colisiones. La opción de reducir movimiento mantiene fijos los elementos del fondo.
+- Persistencia: `void-rescue-ii.landscape.v1` con validación; `void-rescue-ii.records.v1` separa los récords de la primera entrega.
+- Control: diálogo accesible desde título/pausa, teclado/ratón/mando (navegación básica), edición aplicada en vivo.
+- Comprobación automatizada: TypeScript, 66 pruebas unitarias y compilación aprobadas; 6 tests E2E de paisajes aprobados a 960×540 en ambos backends; capturas a 1920×1080 obtenidas en ambos.
+- Pendiente: evaluación visual y de rendimiento con GPU real, recorrido completo de pruebas originales y revisión del diseño de interacción con el usuario. Las reglas de combate/oleadas se mantienen intactas hasta el objetivo 2.

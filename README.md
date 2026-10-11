@@ -7,9 +7,27 @@ Nueva versión independiente, derivada del código funcional de [Void Rescue I](
 - **Paisajes procedurales con paralaje:** montañas y edificios, paletas predefinidas y personalizadas, editor y transición de paisaje al completar cada oleada.
 - **Jugabilidad rediseñada:** enemigos recurrentes por zona y tiempo; modo Rescatista con evacuación de todos los colonos recuperables y modo Defensivo con supervivencia temporizada y mínimo de colonos protegidos.
 
-**Estado actual (11 de octubre de 2026):** copia base del código de Void Rescue I importada íntegramente (128 archivos), con historial nuevo e independiente. La implementación de las nuevas funciones está pendiente. Las pruebas de compilación y ejecución de esta copia aún no se han realizado.
+**Estado actual (11 de octubre de 2026):** el objetivo 1 está implementado en la rama `feat/parallax-landscapes`: cuatro paletas, 2–10 capas de montañas/edificios, cielo y estrellas personalizables, semillas reproducibles, persistencia local y paisajes distintos por oleada. Las reglas de los modos de juego siguen siendo las heredadas de Void Rescue I; el objetivo 2 está pendiente. La clasificación de récords de Void Rescue II utiliza otra clave local para no mezclar puntuaciones.
+
+**Verificación:** `npm ci`, `npm run typecheck`, 66 pruebas Vitest y `npm run build` aprobados en GitHub Actions; seis recorridos Playwright del editor aprobados en Chromium (rutas WebGPU automática y WebGL2) a 960×540. También se revisaron capturas a 1920×1080 en ambos backends. La revisión perceptiva en una PC real y el conjunto completo de recorridos del juego aún están pendientes.
 
 **[Ver hoja de ruta y criterios técnicos](docs/VOID_RESCUE_II_ROADMAP.md)**.
+
+## Probar los paisajes de Void Rescue II
+
+```powershell
+git clone https://github.com/raulcamaracarreon/Void-Rescue-II.git
+cd Void-Rescue-II
+git switch feat/parallax-landscapes
+npm ci
+npm run dev
+```
+
+Abre http://127.0.0.1:5173/ y selecciona **PERSONALIZAR PAISAJE** en el título o la pausa. Elige **Automático por oleada** para cambiar de ambiente cada vez que se completa una oleada; usa **Editar estilo actual** para modificar cielo, estrellas, capas, colores, amplitud, detalle y semilla. Los ajustes quedan en tu navegador, independientemente del resultado de la partida.
+
+Las calibraciones de mando existentes se reutilizan; los récords de esta nueva versión se almacenan separadamente.
+
+
 
 > La dirección de juego online y las instrucciones que aparecen en el manual heredado corresponden todavía a **Void Rescue I**, no a una versión publicada de Void Rescue II.
 

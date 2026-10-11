@@ -1,12 +1,14 @@
 name: Validar Void Rescue II
 
 on:
-  push:
-    branches:
-      - feat/parallax-landscapes
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: vr2-verify-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
