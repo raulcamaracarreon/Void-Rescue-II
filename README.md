@@ -9,7 +9,7 @@ Nueva versión independiente, derivada del código funcional de [Void Rescue I](
 
 **Estado actual (11 de octubre de 2026):** el objetivo 1 está integrado en `main` mediante los [PR #3](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/3) y [#4](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/4): cuatro paletas, gradiente RGB automático definido por dos colores, editor avanzado por capa, 2–10 capas de montañas/edificios, estrellas, semillas reproducibles, persistencia local y paisajes distintos por oleada. La fase B está incorporada a `main` mediante el [PR #10](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/10), como **opción independiente sin sustituir el juego clásico**. El balance de dificultad y la evaluación en una PC real están pendientes. La clasificación de récords de Void Rescue II utiliza otra clave local para no mezclar puntuaciones.
 
-**Verificación (PR #10):** `npm ci`, `npm run typecheck`, **91 pruebas unitarias** y `npm run build` aprobados en GitHub Actions; **16 pruebas Playwright** de paisajes, HUD y selección de modalidades aprobadas en Chromium (WebGPU automático y WebGL2) a 960×540. También se revisaron capturas a 1920×1080 en ambos backends. La revisión perceptiva en una PC real y el conjunto completo de recorridos del juego aún están pendientes.
+**Verificación (PR #11):** `npm ci`, `npm run typecheck`, **96 pruebas unitarias** y `npm run build` aprobados en GitHub Actions; **20 pruebas Playwright** de paisajes, HUD, modos de juego y haz de rescate mantenido aprobadas en Chromium (WebGPU automático y WebGL2) a 960×540. También se revisaron capturas a 1920×1080 en ambos backends. La revisión perceptiva en una PC real y el conjunto completo de recorridos del juego aún están pendientes.
 
 **[Ver hoja de ruta y criterios técnicos](docs/VOID_RESCUE_II_ROADMAP.md)**.
 
@@ -20,6 +20,14 @@ En el título, antes de iniciar un vuelo, aparecen tres controles independientes
 - **ENEMIGOS — Clásico (predeterminado):** enemigos programados en un número finito; victoria según las reglas heredadas de Void Rescue I, incluyendo eliminar amenazas y completar rescates pendientes.
 - **ENEMIGOS — Dinámico por zonas:** amenazas que reaparecen mientras la oleada permanezca activa, según la ubicación del jugador, con distancia de seguridad, cooldown regional y cupo limitado; no hace falta exterminarlas para obtener la victoria.
 - **MISIÓN — Rescatista / Defensivo:** disponible con ambos sistemas. En el sistema dinámico, Rescatista termina cuando todos los colonos estén a salvo o perdidos y al menos uno haya sido entregado; Defensivo exige resistir **120 segundos y conservar 4 de 8 colonos** en dificultad Normal durante la primera oleada. El tiempo crece hasta un máximo de 180 segundos en oleadas posteriores; los umbrales dependen de la dificultad.
+
+### Rescatista: embarque múltiple (PR #11)
+
+Mantén **E** (teclado) o **Y/△** (mando) cuando la nave esté sobre un colono. El haz lo eleva **progresivamente a 5.5 unidades por segundo**; debes sostener el botón hasta que llegue a la nave. Soltarlo antes de tiempo interrumpe la extracción y el colono cae (puede sobrevivir o ser atrapado). Una vez recogido, el colono **entra en la nave**: desaparece de la vista exterior y aparece en el contador **A BORDO** del HUD.
+
+Puedes recoger sucesivamente **hasta los ocho colonos** sin regresar después de cada uno y entregarlos todos juntos aterrizando despacio dentro de **Fortaleza 01**. Si destruyen la nave, los pasajeros salen y caen, pero es posible recuperarlos. El modo Defensivo conserva el transporte anterior de los colonos atrapados en caída.
+
+El HUD es más compacto, sin fondos, contornos ni sombras, y utiliza un solo color contrastado con el cielo.
 
 Los récords se clasifican por separado según el sistema de enemigos y la misión. Los anteriores se conservan como clásicos. La selección se guarda para el siguiente vuelo, sin cambiar el comportamiento de una partida en curso.
 
