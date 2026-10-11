@@ -22,9 +22,9 @@ describe('paisajes procedurales', () => {
     }
     const p = defaultLandscapePreferences();
     for (const [id, sky, foreground] of [
-      ['martian_dusk', '#f04b27', '#3d230f'],
-      ['polar_overcast', '#f7f7f9', '#4b5685'],
-      ['strange_planet', '#f227b3', '#350033'],
+      ['martian_dusk', '#ef4d25', '#482a0f'],
+      ['polar_overcast', '#fafafa', '#46527c'],
+      ['strange_planet', '#f92fc3', '#481043'],
     ]) {
       p.selection = id as typeof p.selection;
       const style = resolveLandscape(p, 3).style;
