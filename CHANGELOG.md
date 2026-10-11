@@ -2,6 +2,12 @@
 
 Este historial describe el desarrollo activo de la versión web de **Void Rescue II**, que queda cerrado con la primera versión estable **v1.0.0**.
 
+## Mantenimiento posterior a v1.0.0 — 11 de octubre de 2026
+
+- Explosiones de naves con partículas y destellos adaptados al color del cielo, reutilizando el contraste complementario del HUD.
+- Contraste de partículas oscuras sobre cielos claros y actualización de paleta al cambiar de paisaje, incluso con rotación aleatoria reproducible por semilla.
+- Integración visual sin modificar simulación ni reglas de juego (PR #15).
+
 ## [v1.0.0] — 11 de octubre de 2026
 
 **Primera versión estable (Release oficial).** Sitio jugable en [GitHub Pages](https://raulcamaracarreon.github.io/Void-Rescue-II/).
