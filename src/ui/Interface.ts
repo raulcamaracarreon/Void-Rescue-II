@@ -171,7 +171,6 @@ export class Interface {
     this.hud.style.setProperty('--vr-hud-secondary', theme.secondary);
     this.hud.style.setProperty('--vr-hud-accent', theme.accent);
     this.hud.style.setProperty('--vr-hud-warning', theme.warning);
-    this.hud.style.setProperty('--vr-hud-plate', theme.plate);
     this.hud.style.setProperty('--vr-hud-outline', theme.outline);
   }
 
