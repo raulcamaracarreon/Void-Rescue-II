@@ -10,6 +10,32 @@ test.beforeEach(async ({ page }, info) => {
   await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
 });
 
+test('genera un gradiente de dos extremos y permite volver a edición avanzada sin perder sus cambios', async ({ page }) => {
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
+  await dialog.getByRole('combobox', { name: 'Estilo de paisaje' }).selectOption('ice');
+  await expect(dialog.getByRole('combobox', { name: 'Modo de edición' })).toHaveValue('automatic');
+  await expect(dialog.getByLabel('Color de capa 1')).toBeHidden();
+  await dialog.getByLabel('Color del cielo', { exact: true }).fill('#96dbef');
+  await dialog.getByLabel('Color de la capa más cercana').fill('#164c78');
+  await dialog.getByLabel('Número de capas').fill('5');
+  const auto = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
+  expect(auto.selection).toBe('custom');
+  expect(auto.custom.automatic).toMatchObject({ skyColor: '#96dbef', frontColor: '#164c78', layerCount: 5 });
+  expect(await dialog.locator('.landscape-swatches span').count()).toBe(6);
+  await dialog.getByRole('combobox', { name: 'Modo de edición' }).selectOption('advanced');
+  await dialog.getByLabel('Color de capa 1').fill('#da356f');
+  await dialog.getByRole('combobox', { name: 'Modo de edición' }).selectOption('automatic');
+  await dialog.getByRole('combobox', { name: 'Modo de edición' }).selectOption('advanced');
+  await expect(dialog.getByLabel('Color de capa 1')).toHaveValue('#da356f');
+  await dialog.getByRole('button', { name: /LISTO/ }).click();
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
+  const saved = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
+  expect(saved.mode).toBe('advanced');
+  expect(saved.custom.layers[0]!.color).toBe('#da356f');
+});
+
 test('permite escoger ambiente y jugar con el paisaje seleccionado', async ({ page }, info) => {
   await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
@@ -38,7 +64,7 @@ test('edita capas y colores, guarda y recupera tras recargar', async ({ page }) 
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
   const preferences = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape);
-  expect(preferences.custom.layers).toHaveLength(5);
+  expect(preferences.custom.layers).toHaveLength(7);
   expect(preferences.custom.layers[0]).toMatchObject({ type: 'buildings', detail: 75 });
   expect(preferences.custom.skyTop).toBe('#142536');
 });

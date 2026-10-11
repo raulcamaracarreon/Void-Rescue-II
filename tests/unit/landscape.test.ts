@@ -2,17 +2,67 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../../src/game/config';
 import {
   copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS, landscapeVisualSeed,
+  mixLandscapeColors,
   resolveLandscape, sanitizeLandscapePreferences,
 } from '../../src/landscape/LandscapeConfig';
 import { landscapeSilhouette, parallaxFactor, parallaxOffset } from '../../src/landscape/LandscapeMath';
 import { ParallaxLandscape } from '../../src/render/ParallaxLandscape';
 
 describe('paisajes procedurales', () => {
+  it('interpola RGB como el generador original, dejando la última capa idéntica al color frontal', () => {
+    const sky = '#96dbef', front = '#164c78';
+    expect(mixLandscapeColors(sky, front, 0)).toBe(sky);
+    expect(mixLandscapeColors(sky, front, 1)).toBe(front);
+    const prefs = defaultLandscapePreferences();
+    prefs.selection = 'ice';
+    const style = resolveLandscape(prefs, 1).style;
+    expect(style.skyTop).toBe(sky);
+    expect(style.skyBottom).toBe(sky);
+    expect(style.layers).toHaveLength(6);
+    expect(style.layers[0]!.color).toBe(mixLandscapeColors(sky, front, 1 / 6));
+    expect(style.layers[5]!.color).toBe(front);
+    expect(style.layers.every((layer, i) => layer.color === mixLandscapeColors(sky, front, (i + 1) / 6))).toBe(true);
+    expect(style.layers[0]!.detail).toBeLessThan(style.layers.at(-1)!.detail);
+    expect(style.layers[0]!.amplitude).toBeLessThan(style.layers.at(-1)!.amplitude);
+  });
+
+  it('preserva las capas avanzadas independientemente del gradiente automático', () => {
+    const prefs = defaultLandscapePreferences();
+    prefs.selection = 'custom';
+    prefs.custom = {
+      ...prefs.custom,
+      automatic: { skyColor: '#96dbef', frontColor: '#164c78', layerCount: 5, composition: 'mixed' },
+      layers: [{ type: 'buildings', color: '#ff0033', amplitude: 22, detail: 75 },
+        ...prefs.custom.layers.slice(1)],
+      advancedEdited: true,
+    };
+    const automatic = resolveLandscape(prefs, 2).style;
+    expect(automatic.layers).toHaveLength(5);
+    expect(automatic.layers[0]!.color).not.toBe('#ff0033');
+    prefs.mode = 'advanced';
+    expect(resolveLandscape(prefs, 2).style.layers[0]!.color).toBe('#ff0033');
+    expect(sanitizeLandscapePreferences(JSON.parse(JSON.stringify(prefs)))).toEqual(prefs);
+  });
+
+  it('migra preferencias antiguas personalizadas sin eliminar capas manuales', () => {
+    const prior = { selection: 'custom', custom: {
+      skyTop: '#102030', skyBottom: '#123456', stars: true, seed: 72,
+      layers: Array.from({ length: 3 }, (_, i) => ({ type: 'mountains', color: '#12345' + i, amplitude: 10, detail: 20 })),
+    } };
+    const migrated = sanitizeLandscapePreferences(prior);
+    expect(migrated.mode).toBe('advanced');
+    expect(migrated.custom.layers).toHaveLength(3);
+    expect(migrated.custom.automatic?.skyColor).toBe('#102030');
+    expect(migrated.custom.automatic?.frontColor).toBe('#123452');
+    expect(migrated.custom.advancedEdited).toBe(true);
+  });
+
   it('alterna ambientes por oleada sin cambiar la paleta configurada', () => {
     const preferences = defaultLandscapePreferences();
     expect([1, 2, 3, 4, 5].map(wave => resolveLandscape(preferences, wave).name))
       .toEqual(['Noche estelar', 'Ciudad abandonada', 'Ocaso alienígena', 'Mundo glacial', 'Noche estelar']);
     expect(resolveLandscape(preferences, 1).style.stars).toBe(true);
+    expect(defaultLandscapePreferences().mode).toBe('automatic');
     expect(resolveLandscape(preferences, 3).style.stars).toBe(false);
     preferences.selection = 'city';
     expect(resolveLandscape(preferences, 99).name).toBe('Ciudad abandonada');

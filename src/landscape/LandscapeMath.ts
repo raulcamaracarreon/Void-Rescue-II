@@ -32,8 +32,11 @@ export function landscapeSilhouette(
     const current = Math.floor(i / 4) % count;
     const next = (current + 1) % count;
     const t = (i % 4) / 4;
+    // Distant hills are rounded; close silhouettes retain a more faceted edge.
     const smooth = t * t * (3 - 2 * t);
-    const y = base + peaks[current]! * (1 - smooth) + peaks[next]! * smooth;
+    const distant = 1 - layerIndex / Math.max(1, layerCount - 1);
+    const blend = smooth * distant + t * (1 - distant);
+    const y = base + peaks[current]! * (1 - blend) + peaks[next]! * blend;
     points.push({ x: width * i / samples, y });
   }
   return points;

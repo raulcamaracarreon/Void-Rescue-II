@@ -2,14 +2,19 @@ import {
   copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS, resolveLandscape,
   sanitizeLandscapePreferences,
 } from '../landscape/LandscapeConfig';
-import type { LandscapeLayer, LandscapePreferences, LandscapeSelection, LandscapeStyle } from '../landscape/LandscapeConfig';
+import type {
+  AutomaticLandscape, LandscapeEditorMode, LandscapeLayer, LandscapePreferences,
+  LandscapeSelection, LandscapeStyle,
+} from '../landscape/LandscapeConfig';
 
-/** Shared editor for the title screen and pause menu. Updates are applied to the live game. */
+/** Two editing modes: a derived RGB gradient and complete per-layer controls. */
 export class LandscapePanel {
   private readonly dialog: HTMLDialogElement;
   private readonly selection: HTMLSelectElement;
+  private readonly mode: HTMLSelectElement;
   private readonly layers: HTMLElement;
   private readonly description: HTMLElement;
+  private readonly swatches: HTMLElement;
   private preferences: LandscapePreferences;
 
   constructor(root: HTMLElement, initial: LandscapePreferences,
@@ -22,48 +27,101 @@ export class LandscapePanel {
     this.dialog.innerHTML = `
       <p class="eyebrow">VOID RESCUE II / MUNDO PROCEDURAL</p>
       <h2>Personalizar paisaje<span>.</span></h2>
-      <p class="landscape-help">Elige un ambiente o edita una combinación propia. Los cambios se ven al instante y quedan guardados en este navegador.</p>
-      <label class="landscape-label">Estilo visual
-        <select id="landscape-selection" aria-label="Estilo de paisaje">
-          <option value="cycle">Automático por oleada</option>
-          ${Object.entries(LANDSCAPE_PRESETS).map(([key, preset]) => `<option value="${key}">${preset.label}</option>`).join('')}
-          <option value="custom">Personalizado</option>
-        </select>
-      </label>
-      <p class="landscape-description" role="status"></p>
-      <div class="landscape-global">
-        <label>Cielo superior <input type="color" data-sky="skyTop" aria-label="Color superior del cielo"></label>
-        <label>Horizonte <input type="color" data-sky="skyBottom" aria-label="Color del horizonte"></label>
-        <label>Estrellas <input type="checkbox" data-sky="stars" aria-label="Mostrar estrellas"></label>
-        <label>Semilla <input type="number" min="0" max="999999999" data-sky="seed" aria-label="Semilla de paisaje"></label>
+      <p class="landscape-help">Un gradiente automático entre el color del cielo y el primer plano, o control individual de cada capa. Los cambios se aplican al instante.</p>
+      <div class="landscape-selection-row">
+        <label class="landscape-label">Estilo visual
+          <select id="landscape-selection" aria-label="Estilo de paisaje">
+            <option value="cycle">Automático por oleada</option>
+            ${Object.entries(LANDSCAPE_PRESETS).map(([key, preset]) => `<option value="${key}">${preset.label}</option>`).join('')}
+            <option value="custom">Personalizado</option>
+          </select>
+        </label>
+        <label class="landscape-label">Edición de capas
+          <select id="landscape-mode" aria-label="Modo de edición">
+            <option value="automatic">Automático · dos colores</option>
+            <option value="advanced">Avanzado · por capa</option>
+          </select>
+        </label>
       </div>
-      <div class="landscape-layers-title"><strong>CAPAS · DE LEJOS A CERCA</strong><span>2–10</span></div>
-      <div class="landscape-layers"></div>
+      <p class="landscape-description" role="status"></p>
+      <div class="landscape-automatic">
+        <p class="landscape-help">Elige únicamente dos colores. El juego interpola los tonos de las capas, de lejos a cerca.</p>
+        <div class="landscape-global">
+          <label>Color del cielo <input type="color" data-auto="skyColor" aria-label="Color del cielo"></label>
+          <label>Capa más cercana <input type="color" data-auto="frontColor" aria-label="Color de la capa más cercana"></label>
+          <label>Número de capas <input type="number" min="2" max="10" step="1" data-auto="layerCount" aria-label="Número de capas"></label>
+          <label>Composición <select data-auto="composition" aria-label="Tipo de paisaje">
+            <option value="mountains">Montañas</option><option value="buildings">Edificios</option><option value="mixed">Mixto</option>
+          </select></label>
+        </div>
+        <p class="landscape-swatches-label">GRADIENTE GENERADO · DE LEJOS A CERCA</p>
+        <div class="landscape-swatches" aria-label="Vista previa de colores por capa"></div>
+      </div>
+      <div class="landscape-advanced" hidden>
+        <div class="landscape-global">
+          <label>Cielo superior <input type="color" data-sky="skyTop" aria-label="Color superior del cielo"></label>
+          <label>Horizonte <input type="color" data-sky="skyBottom" aria-label="Color del horizonte"></label>
+        </div>
+        <div class="landscape-layers-title"><strong>CAPAS · DE LEJOS A CERCA</strong><span>2–10</span></div>
+        <div class="landscape-layers"></div>
+        <div class="landscape-buttons">
+          <button type="button" data-landscape="add">+ Capa</button>
+          <button type="button" data-landscape="remove">− Capa</button>
+        </div>
+      </div>
+      <div class="landscape-common">
+        <label>Estrellas <input type="checkbox" data-common="stars" aria-label="Mostrar estrellas"></label>
+        <label>Semilla <input type="number" min="0" max="999999999" data-common="seed" aria-label="Semilla de paisaje"></label>
+      </div>
       <div class="landscape-buttons">
         <button type="button" data-landscape="customize">Editar estilo actual</button>
-        <button type="button" data-landscape="add">+ Capa</button>
-        <button type="button" data-landscape="remove">− Capa</button>
         <button type="button" data-landscape="restore">Restablecer</button>
       </div>
       <button type="button" class="primary" data-landscape="close">LISTO / VOLVER ↗</button>
-      <p class="landscape-help">Los paisajes personalizados conservan sus colores entre oleadas, pero cambian de silueta al avanzar.</p>
+      <p class="landscape-help">Las siluetas cambian de semilla al avanzar de oleada. El modo Automático por oleada cambia también de paleta.</p>
     `;
     root.append(this.dialog);
     this.selection = this.dialog.querySelector<HTMLSelectElement>('#landscape-selection')!;
+    this.mode = this.dialog.querySelector<HTMLSelectElement>('#landscape-mode')!;
     this.layers = this.dialog.querySelector<HTMLElement>('.landscape-layers')!;
     this.description = this.dialog.querySelector<HTMLElement>('.landscape-description')!;
+    this.swatches = this.dialog.querySelector<HTMLElement>('.landscape-swatches')!;
+
     this.selection.addEventListener('change', () => {
       this.preferences.selection = this.selection.value as LandscapeSelection;
-      this.render();
       this.commit();
+      this.render();
     });
+    this.mode.addEventListener('change', () => {
+      this.switchMode(this.mode.value as LandscapeEditorMode);
+    });
+    for (const input of this.dialog.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-auto]')) {
+      input.addEventListener('change', () => {
+        const style = this.mutableStyle();
+        const settings = style.automatic!;
+        const key = input.dataset.auto as keyof AutomaticLandscape;
+        if (key === 'layerCount') settings.layerCount = Math.max(2, Math.min(10, Math.round(Number(input.value) || 2)));
+        else if (key === 'composition') settings.composition = input.value === 'buildings' || input.value === 'mixed' ? input.value : 'mountains';
+        else if (key === 'skyColor' || key === 'frontColor') settings[key] = input.value;
+        this.commit();
+        this.render();
+      });
+    }
     for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-sky]')) {
       input.addEventListener('change', () => {
         const style = this.mutableStyle();
-        const key = input.dataset.sky as keyof Pick<LandscapeStyle, 'skyTop' | 'skyBottom' | 'stars' | 'seed'>;
+        const key = input.dataset.sky as 'skyTop' | 'skyBottom';
+        style[key] = input.value;
+        style.advancedEdited = true;
+        this.commit();
+      });
+    }
+    for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-common]')) {
+      input.addEventListener('change', () => {
+        const style = this.mutableStyle();
+        const key = input.dataset.common;
         if (key === 'stars') style.stars = input.checked;
         else if (key === 'seed') style.seed = Math.max(0, Math.min(999999999, Math.round(Number(input.value) || 0)));
-        else style[key] = input.value;
         this.commit();
       });
     }
@@ -81,23 +139,29 @@ export class LandscapePanel {
       else if (key === 'color') layer.color = input.value;
       else if (key === 'amplitude') layer.amplitude = Math.max(2, Math.min(35, Math.round(Number(input.value) || 2)));
       else if (key === 'detail') layer.detail = Math.max(1, Math.min(100, Math.round(Number(input.value) || 1)));
+      style.advancedEdited = true;
       this.commit();
     });
+
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="customize"]')!.addEventListener('click', () => {
-      this.mutableStyle(); this.render(); this.commit();
+      if (this.preferences.mode === 'automatic') this.switchMode('advanced');
+      else { this.mutableStyle(); this.render(); this.commit(); }
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="add"]')!.addEventListener('click', () => {
       const style = this.mutableStyle();
       if (style.layers.length < 10) style.layers.push({ ...style.layers[style.layers.length - 1]! });
-      this.render(); this.commit();
+      style.advancedEdited = true;
+      this.commit(); this.render();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="remove"]')!.addEventListener('click', () => {
       const style = this.mutableStyle();
       if (style.layers.length > 2) style.layers.pop();
-      this.render(); this.commit();
+      style.advancedEdited = true;
+      this.commit(); this.render();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="restore"]')!.addEventListener('click', () => {
-      this.preferences = defaultLandscapePreferences(); this.render(); this.commit();
+      this.preferences = defaultLandscapePreferences();
+      this.commit(); this.render();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="close"]')!.addEventListener('click', () => this.close());
     this.dialog.addEventListener('cancel', event => { event.preventDefault(); this.close(); });
@@ -114,7 +178,8 @@ export class LandscapePanel {
 
   navigatePad(command: { x: number; y: number; confirm: boolean; back: boolean }): void {
     if (command.back) { this.close(); return; }
-    const controls = [...this.dialog.querySelectorAll<HTMLElement>('input, select, button')].filter(element => element.getBoundingClientRect().width > 0);
+    const controls = [...this.dialog.querySelectorAll<HTMLElement>('input, select, button')]
+      .filter(element => element.getBoundingClientRect().width > 0);
     if (!controls.length) return;
     let index = controls.indexOf(document.activeElement as HTMLElement);
     if (index < 0) index = 0;
@@ -137,9 +202,27 @@ export class LandscapePanel {
     }
   }
 
+  private switchMode(mode: LandscapeEditorMode): void {
+    if (mode === 'advanced' && this.preferences.mode === 'automatic') {
+      // First switch copies the visible gradient; subsequent switches preserve hand-made layers.
+      const visible = resolveLandscape(this.preferences, this.currentWave()).style;
+      const style = this.mutableStyle();
+      if (!style.advancedEdited) style.layers = visible.layers.map(layer => ({ ...layer }));
+      if (!style.advancedEdited) {
+        style.skyTop = visible.skyTop;
+        style.skyBottom = visible.skyBottom;
+      }
+    }
+    this.preferences.mode = mode;
+    this.commit();
+    this.render();
+  }
+
   private mutableStyle(): LandscapeStyle {
     if (this.preferences.selection !== 'custom') {
-      this.preferences.custom = copyLandscape(resolveLandscape(this.preferences, this.currentWave()).style);
+      const current = resolveLandscape(this.preferences, this.currentWave()).style;
+      this.preferences.custom = copyLandscape(current);
+      this.preferences.custom.advancedEdited = false;
       this.preferences.selection = 'custom';
       this.selection.value = 'custom';
     }
@@ -148,7 +231,6 @@ export class LandscapePanel {
 
   private commit(): void {
     this.preferences = sanitizeLandscapePreferences(this.preferences);
-    this.selection.value = this.preferences.selection;
     this.updateDescription();
     this.onChange(sanitizeLandscapePreferences(this.preferences));
   }
@@ -156,19 +238,42 @@ export class LandscapePanel {
   private updateDescription(): void {
     const { name, style } = resolveLandscape(this.preferences, this.currentWave());
     const suffix = this.preferences.selection === 'cycle' ? ' · cambia en la siguiente oleada' : '';
-    this.description.textContent = `${name} · ${style.layers.length} capas${suffix}`;
+    this.description.textContent = `${name} · ${style.layers.length} capas · ${this.preferences.mode === 'automatic' ? 'gradiente automático' : 'edición avanzada'}${suffix}`;
   }
 
   private render(): void {
     const style = resolveLandscape(this.preferences, this.currentWave()).style;
+    const automatic = style.automatic!;
     this.selection.value = this.preferences.selection;
+    this.mode.value = this.preferences.mode;
+    this.dialog.querySelector<HTMLElement>('.landscape-automatic')!.hidden = this.preferences.mode !== 'automatic';
+    this.dialog.querySelector<HTMLElement>('.landscape-advanced')!.hidden = this.preferences.mode !== 'advanced';
+
+    for (const input of this.dialog.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-auto]')) {
+      const key = input.dataset.auto as keyof AutomaticLandscape;
+      input.value = String(automatic[key]);
+    }
+    this.swatches.replaceChildren();
+    if (this.preferences.mode === 'automatic') {
+      const colors = [automatic.skyColor, ...style.layers.map(layer => layer.color)];
+      for (let index = 0; index < colors.length; index++) {
+        const swatch = document.createElement('span');
+        swatch.style.backgroundColor = colors[index]!;
+        swatch.title = index === 0 ? 'Cielo' : `Capa ${index}`;
+        swatch.setAttribute('aria-label', swatch.title);
+        this.swatches.append(swatch);
+      }
+    }
     for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-sky]')) {
       const key = input.dataset.sky;
       if (key === 'skyTop') input.value = style.skyTop;
       else if (key === 'skyBottom') input.value = style.skyBottom;
-      else if (key === 'stars') input.checked = style.stars;
-      else if (key === 'seed') input.value = String(style.seed);
     }
+    for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-common]')) {
+      if (input.dataset.common === 'stars') input.checked = style.stars;
+      else input.value = String(style.seed);
+    }
+
     this.layers.innerHTML = style.layers.map((layer, i) => `
       <div class="landscape-layer" data-layer="${i}">
         <span class="landscape-layer-index">${String(i + 1).padStart(2, '0')}</span>

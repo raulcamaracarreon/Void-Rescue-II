@@ -3,6 +3,15 @@ import { Random } from '../core/Random';
 export type LandscapeLayerKind = 'mountains' | 'buildings';
 export type LandscapePreset = 'night' | 'city' | 'sunset' | 'ice';
 export type LandscapeSelection = 'cycle' | LandscapePreset | 'custom';
+export type LandscapeEditorMode = 'automatic' | 'advanced';
+export type LandscapeComposition = 'mountains' | 'buildings' | 'mixed';
+
+export interface AutomaticLandscape {
+  skyColor: string;
+  frontColor: string;
+  layerCount: number;
+  composition: LandscapeComposition;
+}
 
 export interface LandscapeLayer {
   type: LandscapeLayerKind;
@@ -17,10 +26,13 @@ export interface LandscapeStyle {
   stars: boolean;
   seed: number;
   layers: LandscapeLayer[];
+  automatic?: AutomaticLandscape;
+  advancedEdited?: boolean;
 }
 
 export interface LandscapePreferences {
   selection: LandscapeSelection;
+  mode: LandscapeEditorMode;
   custom: LandscapeStyle;
 }
 
@@ -66,20 +78,78 @@ export const LANDSCAPE_PRESETS: Record<LandscapePreset, { label: string; style: 
   } },
 };
 
+/** RGB interpolation matches the original Landscape Generator's mix(a,b,t) exactly. */
+export function mixLandscapeColors(sky: string, front: string, t: number): string {
+  const amount = Math.max(0, Math.min(1, t));
+  const components = [1, 3, 5].map(index => {
+    const a = Number.parseInt(sky.slice(index, index + 2), 16);
+    const b = Number.parseInt(front.slice(index, index + 2), 16);
+    return Math.round(a * (1 - amount) + b * amount).toString(16).padStart(2, '0');
+  });
+  return '#' + components.join('');
+}
+
+const AUTO_PRESETS: Record<LandscapePreset, AutomaticLandscape> = {
+  night: { skyColor: '#020509', frontColor: '#17465a', layerCount: 6, composition: 'mountains' },
+  city: { skyColor: '#1d2947', frontColor: '#0a142c', layerCount: 6, composition: 'mixed' },
+  sunset: { skyColor: '#e6a0a0', frontColor: '#422b56', layerCount: 6, composition: 'mixed' },
+  ice: { skyColor: '#96dbef', frontColor: '#164c78', layerCount: 6, composition: 'mountains' },
+};
+
 export function copyLandscape(style: LandscapeStyle): LandscapeStyle {
-  return { ...style, layers: style.layers.map(layer => ({ ...layer })) };
+  return {
+    ...style,
+    layers: style.layers.map(layer => ({ ...layer })),
+    ...(style.automatic ? { automatic: { ...style.automatic } } : {}),
+  };
+}
+
+function copyAutomatic(config: AutomaticLandscape): AutomaticLandscape { return { ...config }; }
+
+export function buildAutomaticLandscape(base: LandscapeStyle, config: AutomaticLandscape): LandscapeStyle {
+  const count = config.layerCount;
+  const layers: LandscapeLayer[] = Array.from({ length: count }, (_, index) => {
+    const depth = count === 1 ? 1 : index / (count - 1);
+    const type: LandscapeLayerKind = config.composition === 'mixed'
+      ? (index % 3 === 2 ? 'buildings' : 'mountains') : config.composition;
+    return {
+      type,
+      // The sky is the unpainted layer zero; (i + 1) / count follows the original generator.
+      color: mixLandscapeColors(config.skyColor, config.frontColor, (index + 1) / count),
+      amplitude: Math.round(6 + 20 * depth),
+      detail: Math.round(12 + 73 * depth),
+    };
+  });
+  return {
+    ...copyLandscape(base),
+    skyTop: config.skyColor,
+    skyBottom: config.skyColor,
+    automatic: copyAutomatic(config),
+    layers,
+  };
 }
 
 export function defaultLandscapePreferences(): LandscapePreferences {
-  return { selection: 'cycle', custom: copyLandscape(LANDSCAPE_PRESETS.night.style) };
+  return {
+    selection: 'cycle',
+    mode: 'automatic',
+    custom: { ...copyLandscape(LANDSCAPE_PRESETS.night.style), automatic: copyAutomatic(AUTO_PRESETS.night), advancedEdited: false },
+  };
 }
 
 export function resolveLandscape(preferences: LandscapePreferences, wave: number): { name: string; style: LandscapeStyle } {
-  if (preferences.selection === 'custom') return { name: 'Personalizado', style: copyLandscape(preferences.custom) };
-  const preset = preferences.selection === 'cycle'
+  const selection = preferences.selection;
+  const preset = selection === 'cycle'
     ? PRESET_ORDER[((Math.max(1, Math.floor(wave)) - 1) % PRESET_ORDER.length + PRESET_ORDER.length) % PRESET_ORDER.length]!
-    : preferences.selection;
-  return { name: LANDSCAPE_PRESETS[preset].label, style: copyLandscape(LANDSCAPE_PRESETS[preset].style) };
+    : selection;
+  if (preset === 'custom') {
+    const custom = copyLandscape(preferences.custom);
+    return { name: 'Personalizado', style: preferences.mode === 'automatic'
+      ? buildAutomaticLandscape(custom, custom.automatic ?? AUTO_PRESETS.night) : custom };
+  }
+  const source = { ...copyLandscape(LANDSCAPE_PRESETS[preset].style), automatic: copyAutomatic(AUTO_PRESETS[preset]) };
+  return { name: LANDSCAPE_PRESETS[preset].label, style: preferences.mode === 'automatic'
+    ? buildAutomaticLandscape(source, AUTO_PRESETS[preset]) : source };
 }
 
 function color(value: unknown, fallback: string): string {
@@ -89,7 +159,19 @@ function int(value: unknown, min: number, max: number, fallback: number): number
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, Math.round(value))) : fallback;
 }
 
-export function sanitizeLandscapeStyle(value: unknown, fallback = LANDSCAPE_PRESETS.night.style): LandscapeStyle {
+function sanitizeAutomatic(value: unknown, fallback: AutomaticLandscape): AutomaticLandscape {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return copyAutomatic(fallback);
+  const v = value as Record<string, unknown>;
+  return {
+    skyColor: color(v.skyColor, fallback.skyColor),
+    frontColor: color(v.frontColor, fallback.frontColor),
+    layerCount: int(v.layerCount, 2, 10, fallback.layerCount),
+    composition: v.composition === 'mountains' || v.composition === 'buildings' || v.composition === 'mixed'
+      ? v.composition : fallback.composition,
+  };
+}
+
+export function sanitizeLandscapeStyle(value: unknown, fallback = defaultLandscapePreferences().custom): LandscapeStyle {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return copyLandscape(fallback);
   const v = value as Record<string, unknown>;
   const source = Array.isArray(v.layers) && v.layers.length >= 2 && v.layers.length <= 10
@@ -104,12 +186,25 @@ export function sanitizeLandscapeStyle(value: unknown, fallback = LANDSCAPE_PRES
       detail: int(layer.detail, 1, 100, old.detail),
     };
   });
+  // Migrate existing v1 custom landscapes without discarding hand-edited layers.
+  const legacy = !('automatic' in v);
+  const autoFallback: AutomaticLandscape = fallback.automatic ?? AUTO_PRESETS.night;
   return {
     skyTop: color(v.skyTop, fallback.skyTop),
     skyBottom: color(v.skyBottom, fallback.skyBottom),
     stars: typeof v.stars === 'boolean' ? v.stars : fallback.stars,
     seed: int(v.seed, 0, 999999999, fallback.seed),
     layers,
+    automatic: sanitizeAutomatic(v.automatic, legacy
+      ? {
+          skyColor: color(v.skyTop, autoFallback.skyColor),
+          frontColor: layers[layers.length - 1]!.color,
+          layerCount: layers.length,
+          composition: layers.every(l => l.type === 'mountains') ? 'mountains'
+            : layers.every(l => l.type === 'buildings') ? 'buildings' : 'mixed',
+        }
+      : autoFallback),
+    advancedEdited: typeof v.advancedEdited === 'boolean' ? v.advancedEdited : legacy,
   };
 }
 
@@ -122,6 +217,9 @@ export function sanitizeLandscapePreferences(value: unknown): LandscapePreferenc
     selection: selection === 'cycle' || selection === 'custom' ||
       (typeof selection === 'string' && Object.hasOwn(LANDSCAPE_PRESETS, selection))
         ? selection as LandscapeSelection : defaults.selection,
+    // Old custom palettes stay in advanced mode so user work is preserved.
+    mode: v.mode === 'automatic' || v.mode === 'advanced' ? v.mode
+      : v.selection === 'custom' ? 'advanced' : defaults.mode,
     custom: sanitizeLandscapeStyle(v.custom),
   };
 }
