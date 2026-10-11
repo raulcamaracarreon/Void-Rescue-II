@@ -27,7 +27,7 @@ Abre http://127.0.0.1:5173/ y selecciona **PERSONALIZAR PAISAJE** en el título 
 - **Automático · dos colores (predeterminado):** selecciona el **color del cielo**, el **color de la capa más cercana**, cuántas capas (2–10), y la composición de montañas/edificios/mixto. Las capas intermedias se colorean automáticamente usando la misma interpolación RGB del generador original: `color_i = mezcla(cielo, frontal, (i+1)/N)`. Se muestran muestras del gradiente antes de aplicar.
 - **Avanzado · por capa:** modifica cada capa de manera individual (tipo, color, amplitud y detalle), con colores independientes para cielo y horizonte. Volver al automático no destruye las capas avanzadas ya editadas; ambos ajustes persisten.
 
-La semilla y las estrellas están disponibles en ambos modos. Un estilo personalizado conserva su paleta entre oleadas, mientras que **Automático por oleada** cambia de ambiente al completar cada una. Los ajustes quedan en tu navegador y los antiguos diseños personalizados migran al modo Avanzado para no perderse.
+La semilla, las estrellas y la opción **Mostrar luna** están disponibles en ambos modos. La luna ahora es una esfera pequeña, blanca y brillante, con halo discreto, que puedes ocultar sin afectar el gradiente del paisaje. La preferencia queda guardada. Un estilo personalizado conserva su paleta entre oleadas, mientras que **Automático por oleada** cambia de ambiente al completar cada una. Los ajustes quedan en tu navegador y los antiguos diseños personalizados migran al modo Avanzado para no perderse.
 
 Las calibraciones de mando existentes se reutilizan; los récords de esta nueva versión se almacenan separadamente.
 

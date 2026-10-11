@@ -62,10 +62,30 @@ describe('paisajes procedurales', () => {
     expect([1, 2, 3, 4, 5].map(wave => resolveLandscape(preferences, wave).name))
       .toEqual(['Noche estelar', 'Ciudad abandonada', 'Ocaso alienígena', 'Mundo glacial', 'Noche estelar']);
     expect(resolveLandscape(preferences, 1).style.stars).toBe(true);
+    expect(resolveLandscape(preferences, 1).style.moon).toBe(true);
+    expect(resolveLandscape(preferences, 3).style.moon).toBe(false);
     expect(defaultLandscapePreferences().mode).toBe('automatic');
     expect(resolveLandscape(preferences, 3).style.stars).toBe(false);
     preferences.selection = 'city';
     expect(resolveLandscape(preferences, 99).name).toBe('Ciudad abandonada');
+  });
+
+  it('permite ocultar la luna en ambos editores y migra configuraciones anteriores', () => {
+    const preferences = defaultLandscapePreferences();
+    preferences.selection = 'custom';
+    preferences.custom.moon = false;
+    expect(resolveLandscape(preferences, 1).style.moon).toBe(false);
+    preferences.mode = 'advanced';
+    expect(resolveLandscape(preferences, 2).style.moon).toBe(false);
+    expect(sanitizeLandscapePreferences(JSON.parse(JSON.stringify(preferences))).custom.moon).toBe(false);
+    const old = sanitizeLandscapePreferences({
+      selection: 'custom',
+      custom: {
+        skyTop: '#020509', skyBottom: '#142b3c', stars: false, seed: 1,
+        layers: LANDSCAPE_PRESETS.night.style.layers,
+      },
+    });
+    expect(old.custom.moon).toBe(false);
   });
 
   it('persiste una paleta independiente y nunca muta un preset', () => {

@@ -71,6 +71,7 @@ export class LandscapePanel {
       </div>
       <div class="landscape-common">
         <label>Estrellas <input type="checkbox" data-common="stars" aria-label="Mostrar estrellas"></label>
+        <label>Luna <input type="checkbox" data-common="moon" aria-label="Mostrar luna"></label>
         <label>Semilla <input type="number" min="0" max="999999999" data-common="seed" aria-label="Semilla de paisaje"></label>
       </div>
       <div class="landscape-buttons">
@@ -123,6 +124,7 @@ export class LandscapePanel {
         const style = this.mutableStyle();
         const key = input.dataset.common;
         if (key === 'stars') style.stars = input.checked;
+        else if (key === 'moon') style.moon = input.checked;
         else if (key === 'seed') style.seed = Math.max(0, Math.min(999999999, Math.round(Number(input.value) || 0)));
         this.commit();
       });
@@ -277,6 +279,7 @@ export class LandscapePanel {
     }
     for (const input of this.dialog.querySelectorAll<HTMLInputElement>('[data-common]')) {
       if (input.dataset.common === 'stars') input.checked = style.stars;
+      else if (input.dataset.common === 'moon') input.checked = style.moon;
       else input.value = String(style.seed);
     }
 
