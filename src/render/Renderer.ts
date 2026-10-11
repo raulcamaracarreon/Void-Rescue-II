@@ -10,7 +10,8 @@ import { CameraRig } from './CameraRig';
 import { createShip } from './models/Ship';
 import { emission } from './materials';
 import { WorldScene } from './WorldScene';
-import { defaultLandscapePreferences } from '../landscape/LandscapeConfig';
+import { defaultLandscapePreferences, resolveLandscape } from '../landscape/LandscapeConfig';
+import { adaptivePalette } from '../landscape/AdaptivePalette';
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 import { CombatVisuals } from './CombatVisuals';
 
@@ -44,8 +45,10 @@ export class FlightRenderer {
   private readonly ship = createShip();
   readonly combat = new CombatVisuals();
   private readonly shots = new Map<number, Mesh>();
-  private readonly shotGeometry = new BoxGeometry(3.4, 0.14, 0.15);
-  private readonly shotMaterial = emission(0xbffff1);
+  private readonly shotGeometry = new BoxGeometry(3.4, 0.3, 0.15);
+  private readonly shotOutlineGeometry = new BoxGeometry(3.9, 0.68, 0.12);
+  private readonly shotMaterial = emission(0x39ff14);
+  private readonly shotOutlineMaterial = emission(0x060d17);
   private readonly hostileShotMaterial = emission(0xff816d);
   private facingAngle = 0;
   private frameTimes: number[] = [];
@@ -65,6 +68,7 @@ export class FlightRenderer {
     this.renderer.info.autoReset = false;
     this.camera.position.set(0, 52, 120);
     this.world = new WorldScene(seed, landscapePreferences);
+    this.updatePlayerLaser(1);
     this.scene.add(this.world.group, this.world.backdrop, this.ship.group, this.combat.group);
     const hemisphere = new HemisphereLight(0x8fc8df, 0x1c292f, 2.0);
     const key = new DirectionalLight(0xe0ebdf, 3.7);
@@ -107,11 +111,20 @@ export class FlightRenderer {
       this.scene.add(this.world.group, this.world.backdrop);
     }
     this.world.setLandscape(this.landscapePreferences, state.wave);
+    this.updatePlayerLaser(state.wave);
   }
 
   setLandscape(preferences: LandscapePreferences, wave: number): void {
     this.landscapePreferences = preferences;
     this.world.setLandscape(preferences, wave);
+    this.updatePlayerLaser(wave);
+  }
+
+  private updatePlayerLaser(wave: number): void {
+    const { style } = resolveLandscape(this.landscapePreferences, wave);
+    const theme = adaptivePalette(style);
+    this.shotMaterial.color.set(theme.laser);
+    this.shotOutlineMaterial.color.set(theme.laserOutline);
   }
 
   draw(state: FlightState, alpha: number, elapsed: number, active: boolean, title: boolean, reducedMotion: boolean): void {
@@ -151,11 +164,16 @@ export class FlightRenderer {
       let mesh = this.shots.get(shot.id);
       if (!mesh) {
         mesh = new Mesh(this.shotGeometry, this.shotMaterial);
+        const outline = new Mesh(this.shotOutlineGeometry, this.shotOutlineMaterial);
+        outline.name = 'player-shot-outline';
+        outline.position.z = -0.13;
+        mesh.add(outline);
         this.shots.set(shot.id, mesh);
         this.scene.add(mesh);
       }
       mesh.position.set(nearCameraX(shot.x, this.rig.x, CONFIG.worldWidth), shot.y, 0.8);
       mesh.material = shot.team === 'enemy' ? this.hostileShotMaterial : this.shotMaterial;
+      mesh.getObjectByName('player-shot-outline')!.visible = shot.team === 'player';
       mesh.scale.set(shot.team === 'enemy' ? 0.4 : 1, shot.team === 'enemy' ? 4 : 1, 1);
       mesh.rotation.z = Math.atan2(shot.vy, shot.vx);
     }
@@ -180,7 +198,8 @@ export class FlightRenderer {
   dispose(): void {
     this.observer.disconnect();
     disposeTree(this.scene);
-    this.shotGeometry.dispose(); this.shotMaterial.dispose();
+    this.shotGeometry.dispose(); this.shotOutlineGeometry.dispose();
+    this.shotMaterial.dispose(); this.shotOutlineMaterial.dispose();
     this.hostileShotMaterial.dispose();
     this.renderer.dispose();
   }
