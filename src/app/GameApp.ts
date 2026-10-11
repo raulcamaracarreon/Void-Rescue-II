@@ -21,6 +21,8 @@ import { defaultLandscapePreferences, resolveLandscape, sanitizeLandscapePrefere
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 
 const LANDSCAPE_SETTINGS_KEY = 'void-rescue-ii.landscape.v1';
+const GAME_SETTINGS_KEY = 'void-rescue-ii.preferences.v1';
+const LEGACY_SETTINGS_KEY = 'void-rescue.preferences';
 function readLandscapePreferences(): LandscapePreferences {
   try { return sanitizeLandscapePreferences(JSON.parse(localStorage.getItem(LANDSCAPE_SETTINGS_KEY) ?? 'null')); }
   catch { return defaultLandscapePreferences(); }
@@ -29,7 +31,7 @@ function readLandscapePreferences(): LandscapePreferences {
 function readPreferences(): Preferences {
   const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense', spawnMode: 'classic' };
   try {
-    const data: unknown = JSON.parse(localStorage.getItem('void-rescue.preferences') ?? '{}');
+    const data: unknown = JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY) ?? localStorage.getItem(LEGACY_SETTINGS_KEY) ?? '{}');
     if (typeof data !== 'object' || !data) return defaults;
     const value = data as Record<string, unknown>;
     return {
@@ -242,7 +244,7 @@ export class GameApp {
     this.audio.setMuted(preferences.muted);
     this.audio.setVolume(preferences.volume);
     this.ui.syncMuted(preferences.muted);
-    try { localStorage.setItem('void-rescue.preferences', JSON.stringify(preferences)); } catch { /* Session settings still work without storage. */ }
+    try { localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(preferences)); } catch { /* Session settings still work without storage. */ }
   }
 
   private async fullscreen(): Promise<void> {
