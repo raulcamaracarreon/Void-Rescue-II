@@ -108,4 +108,5 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - [x] Biblioteca local con entradas `id`, `name`, `style`, `mode` y operaciones guardar, sobrescribir, duplicar, renombrar y eliminar. Máximo razonable de 100 entradas para proteger el almacenamiento.
 - [x] Rotación mixta con `cyclePool` explícito, orden secuencial o mezcla determinista por partida/bloque sin repetición dentro de una tanda ni entre tandas contiguas.
 - [x] Migración de preferencias v1: conservar `custom` como borrador y dar acceso a guardarlo con nombre. Validación de IDs, colores y capas; los nombres se representan como texto, no HTML.
-- [ ] Pruebas de compilación, navegador y evaluación visual en equipo real; revisar el balance cromático de los nueve nuevos ambientes.
+- [x] `npm run typecheck`, compilación, **99 pruebas unitarias y 22 pruebas Playwright** aprobadas en WebGPU automático y WebGL2 (PR #12).
+- [ ] Revisión perceptiva y balance cromático de los nuevos ambientes en una PC real.
