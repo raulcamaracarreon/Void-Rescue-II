@@ -123,6 +123,7 @@ export class FlightRenderer {
   private updatePlayerLaser(wave: number): void {
     const { style } = resolveLandscape(this.landscapePreferences, wave);
     const theme = adaptivePalette(style);
+    this.combat.setExplosionColor(theme.hudInk);
     this.shotMaterial.color.set(theme.laser);
     this.shotOutlineMaterial.color.set(theme.laserOutline);
   }
