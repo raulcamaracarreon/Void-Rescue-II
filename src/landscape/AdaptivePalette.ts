@@ -3,7 +3,7 @@ import type { LandscapeStyle } from './LandscapeConfig';
 interface RGB { r: number; g: number; b: number }
 export interface AdaptivePalette {
   primary: string; secondary: string; accent: string; warning: string;
-  plate: string; outline: string; laser: string; laserOutline: string;
+  outline: string; laser: string; laserOutline: string;
 }
 const LASER_NEON_GREEN = '#39ff14';
 const validHex = /^#[\da-f]{6}$/i;
@@ -61,23 +61,36 @@ function pickLaserColor(style: LandscapeStyle): string {
   return suitableHue((hueOf(clash) + 180) % 360, clash, 4.5, relativeLuminance(clash) < 0.2);
 }
 
-/** Complementary hues + WCAG luminance decisions, calculated only when the sky changes. */
+/** Choose a complementary tint directly against sky, never against an opaque HUD plate. */
+function inkForSky(hue: number, backdrop: string, target: number): string {
+  const darkText = relativeLuminance(backdrop) > 0.22;
+  return suitableHue(hue % 360, backdrop, target, !darkText);
+}
+
+/** Complementary hues with luminance-aware contrast, calculated when the sky changes. */
 export function adaptivePalette(style: LandscapeStyle): AdaptivePalette {
-  const lightSky = (relativeLuminance(style.skyTop) + relativeLuminance(style.skyBottom)) / 2 >= 0.3;
-  const plateBase = lightSky ? '#f9fdf8' : '#08151e';
-  const complement = (hueOf(style.skyTop) + 180) % 360;
-  const primary = suitableHue(complement, plateBase, 7, !lightSky);
-  const secondary = suitableHue(complement + 24 >= 360 ? complement - 336 : complement + 24, plateBase, 4.5, !lightSky);
-  const accent = suitableHue(complement, plateBase, 4.5, !lightSky);
-  const warning = suitableHue(28, plateBase, 4.5, !lightSky);
+  // HUD data sit in the upper half of the sky, so blend a small amount of the
+  // lower-sky color for advanced gradient landscapes.
+  const bg = toHex({
+    r: rgb(style.skyTop).r * 0.82 + rgb(style.skyBottom).r * 0.18,
+    g: rgb(style.skyTop).g * 0.82 + rgb(style.skyBottom).g * 0.18,
+    b: rgb(style.skyTop).b * 0.82 + rgb(style.skyBottom).b * 0.18,
+  });
+  const darkText = relativeLuminance(bg) > 0.22;
+  const complement = (hueOf(bg) + 180) % 360;
+  const primary = inkForSky(complement, bg, 7);
+  const secondary = inkForSky(complement + 24, bg, 4.5);
+  const accent = inkForSky(complement, bg, 4.5);
+  const warning = inkForSky(28, bg, 4.5);
   const laser = pickLaserColor(style);
   // A contrasting border makes a neon projectile readable over BOTH bright sky
   // and dark mountains as it crosses them during a single flight.
   const laserOutline = relativeLuminance(laser) > 0.3 ? '#060d17' : '#fffdf1';
   return {
     primary, secondary, accent, warning,
-    plate: lightSky ? '#f9fdf8ea' : '#08151ee6',
-    outline: lightSky ? '#ffffffa0' : '#000000d9',
+    // The one-pixel silhouette, not a solid panel, protects readability if
+    // scenery or a different horizon passes behind the text.
+    outline: darkText ? '#ffffffa6' : '#000000dc',
     laser, laserOutline,
   };
 }
