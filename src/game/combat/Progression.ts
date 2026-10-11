@@ -6,6 +6,12 @@ import { difficultyProfile } from '../Difficulty';
 import type { Difficulty } from '../Difficulty';
 import { initializeDirector } from './DynamicDirector';
 
+/** Hard caps prevent infinite spawning from becoming an unbounded simulation. */
+export function activeEnemyCap(wave: number, difficulty: string): number {
+  const profile = difficultyProfile(difficulty);
+  return Math.max(5, Math.min(18, Math.round((8 + Math.min(5, Math.max(0, wave - 1))) * profile.enemyCount)));
+}
+
 // Pressure keeps increasing, approaching 1.8×; bounded populations protect long runs.
 export function wavePressure(wave: number): number {
   return 1 + 0.8 * (wave - 1) / (wave + 9);
