@@ -1,5 +1,6 @@
 import {
   allLandscapeChoices, copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS,
+  landscapeForWave,
   resolveLandscape, sanitizeLandscapePreferences,
 } from '../landscape/LandscapeConfig';
 import type {
@@ -236,7 +237,7 @@ export class LandscapePanel {
       const id = crypto.randomUUID();
       if (this.preferences.library.length >= 100) { this.description.textContent = 'Máximo de 100 paisajes guardados'; return; }
       this.preferences.library.push({
-        id, name, mode: this.preferences.mode,
+        id, name, mode: this.effectiveMode(),
         style: copyLandscape(resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style),
       });
       this.preferences.selection = `user:${id}`;
@@ -258,7 +259,7 @@ export class LandscapePanel {
       const source = this.currentSaved();
       const name = `${source?.name ?? resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).name} (copia)`;
       const id = crypto.randomUUID();
-      this.preferences.library.push({ id, name, mode: this.preferences.mode,
+      this.preferences.library.push({ id, name, mode: this.effectiveMode(),
         style: copyLandscape(resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style) });
       this.preferences.selection = `user:${id}`;
       this.editingId = null;
@@ -322,8 +323,16 @@ export class LandscapePanel {
     return this.preferences.library.find(item => `user:${item.id}` === this.preferences.selection);
   }
 
+  private effectiveMode(): LandscapeEditorMode {
+    const id = this.preferences.selection === 'cycle'
+      ? landscapeForWave(this.preferences, this.currentWave(), this.currentSeed())
+      : this.preferences.selection;
+    return this.preferences.library.find(item => `user:${item.id}` === id)?.mode
+      ?? this.preferences.mode;
+  }
+
   private switchMode(mode: LandscapeEditorMode): void {
-    if (mode === 'advanced' && this.preferences.mode === 'automatic') {
+    if (mode === 'advanced' && this.effectiveMode() === 'automatic') {
       // First switch copies the visible gradient; subsequent switches preserve hand-made layers.
       const visible = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
       const style = this.mutableStyle();
@@ -340,8 +349,10 @@ export class LandscapePanel {
 
   private mutableStyle(): LandscapeStyle {
     if (this.preferences.selection !== 'custom') {
+      const originalMode = this.effectiveMode();
       const current = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
       this.editingId = this.currentSaved()?.id ?? null;
+      this.preferences.mode = originalMode;
       this.preferences.custom = copyLandscape(current);
       this.preferences.custom.advancedEdited = false;
       this.preferences.selection = 'custom';
@@ -359,12 +370,12 @@ export class LandscapePanel {
   private updateDescription(): void {
     const { name, style } = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed());
     const suffix = this.preferences.selection === 'cycle' ? ' · cambia en la siguiente oleada' : '';
-    this.description.textContent = `${name} · ${style.layers.length} capas · ${this.preferences.mode === 'automatic' ? 'gradiente automático' : 'edición avanzada'}${suffix}`;
+    this.description.textContent = `${name} · ${style.layers.length} capas · ${this.effectiveMode() === 'automatic' ? 'gradiente automático' : 'edición avanzada'}${suffix}`;
   }
 
   private paintSwatches(): void {
     this.swatches.replaceChildren();
-    if (this.preferences.mode !== 'automatic') return;
+    if (this.effectiveMode() !== 'automatic') return;
     const style = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
     const colors = [style.automatic!.skyColor, ...style.layers.map(layer => layer.color)];
     for (let i = 0; i < colors.length; i++) {
@@ -426,7 +437,8 @@ export class LandscapePanel {
     const style = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
     const automatic = style.automatic!;
     this.selection.value = this.preferences.selection;
-    this.mode.value = this.preferences.mode;
+    const effectiveMode = this.effectiveMode();
+    this.mode.value = effectiveMode;
     const saved = this.currentSaved() ?? this.preferences.library.find(item => item.id === this.editingId);
     this.nameInput.value = saved?.name ?? '';
     for (const id of ['save-changes', 'rename', 'delete']) {
@@ -434,8 +446,8 @@ export class LandscapePanel {
     }
     this.dialog.querySelector<HTMLSelectElement>('.landscape-rotation')!.value = this.preferences.rotation;
     this.renderRotationList();
-    this.dialog.querySelector<HTMLElement>('.landscape-automatic')!.hidden = this.preferences.mode !== 'automatic';
-    this.dialog.querySelector<HTMLElement>('.landscape-advanced')!.hidden = this.preferences.mode !== 'advanced';
+    this.dialog.querySelector<HTMLElement>('.landscape-automatic')!.hidden = effectiveMode !== 'automatic';
+    this.dialog.querySelector<HTMLElement>('.landscape-advanced')!.hidden = effectiveMode !== 'advanced';
 
     for (const input of this.dialog.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-auto]')) {
       const key = input.dataset.auto as keyof AutomaticLandscape;
