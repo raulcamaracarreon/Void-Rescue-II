@@ -20,12 +20,12 @@ export function engineMaterial() {
   return { material, thrust };
 }
 
-export function skyMaterial(): MeshBasicNodeMaterial {
+export function skyMaterial(top = '#020509', bottom = '#19303b'): MeshBasicNodeMaterial {
   const material = new MeshBasicNodeMaterial({ depthWrite: false });
   const horizon = float(1).sub(uv().y).pow(3);
   const ribbon = sin(uv().x.mul(8).add(uv().y.mul(5))).mul(0.5).add(0.5);
-  material.colorNode = mix(color('#020509'), color('#19303b'), horizon)
-    .add(color('#152c38').mul(ribbon.pow(5)).mul(0.18));
+  material.colorNode = mix(color(top), color(bottom), horizon)
+    .add(color(bottom).mul(ribbon.pow(5)).mul(0.08));
   return material;
 }
 
