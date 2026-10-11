@@ -20,6 +20,7 @@ No requiere instalar el juego para jugar en línea. Funciona en navegadores mode
 - **13 paisajes predefinidos con paralaje**, gradientes automáticos y editor avanzado, además de **hasta 100 paisajes personalizados guardados con nombre**.
 - **Rotación de mundos por oleada:** combina estilos incluidos y personales, marca cuáles participan y elige orden **secuencial** o **aleatorio sin repetición** por tanda, reproducible con la semilla.
 - **HUD flotante adaptativo:** texto de un solo color sólido elegido por contraste con el cielo, sin tarjetas, contornos ni sombras. **Láser del jugador** verde fosforescente o de color complementario si el paisaje requiere más contraste.
+- **Explosiones de naves adaptables al cielo:** chispas y destellos adoptan automáticamente el color complementario de contraste usado por el HUD, también en paisajes personalizados y durante la rotación de mundos.
 - **Escenario circular**, colisiones con terreno, estrellas y luna opcionales, distintas familias de naves enemigas, radar panorámico, bombas, portal, audio y efectos.
 - **Mando USB/gamepad configurable**, teclado, pausa, pantalla completa, seis dificultades, récords y progreso por oleadas.
 
