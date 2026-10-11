@@ -1,12 +1,12 @@
 # VOID RESCUE II
 
-**Versión oficial estable: [v1.0.0](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.0) · Licencia [MIT](LICENSE) · Estado: mantenimiento (desarrollo activo cerrado).**
+**Versión oficial estable: [v1.0.1](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.1) · Licencia [MIT](LICENSE) · Estado: mantenimiento (desarrollo activo cerrado).**
 
 **Arcade espacial 2.5D de combate, defensa y rescate**, para jugar desde el navegador o en tu computadora. Pilota una nave sobre un planeta circular, protege y evacúa colonos, afronta oleadas de amenazas y descubre paisajes procedurales con paralaje.
 
 ### ▶ [JUGAR VOID RESCUE II EN LÍNEA](https://raulcamaracarreon.github.io/Void-Rescue-II/)
 
-**[GitHub Releases v1.0.0](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.0)** · **[Historial de cambios](CHANGELOG.md)** · **[Código](https://github.com/raulcamaracarreon/Void-Rescue-II)** · **[Publicación web](https://github.com/raulcamaracarreon/Void-Rescue-II/actions/workflows/deploy-pages.yml)** · **[Guía de Pages](docs/DEPLOYMENT.md)**
+**[GitHub Releases v1.0.1](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.1)** · **[Historial de cambios](CHANGELOG.md)** · **[Código](https://github.com/raulcamaracarreon/Void-Rescue-II)** · **[Publicación web](https://github.com/raulcamaracarreon/Void-Rescue-II/actions/workflows/deploy-pages.yml)** · **[Guía de Pages](docs/DEPLOYMENT.md)**
 
 No requiere instalar el juego para jugar en línea. Funciona en navegadores modernos con **WebGPU** o **WebGL2** de respaldo. La URL corresponde **a Void Rescue II**, no al juego original. Si la página aún no abre, consulta la [activación inicial de GitHub Pages](docs/DEPLOYMENT.md#primera-publicación).
 
