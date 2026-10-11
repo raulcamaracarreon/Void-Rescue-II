@@ -31,6 +31,8 @@ export class CombatVisuals {
   private readonly destruction = new DestructionEffects();
   private presentationTime = 0;
 
+  setExplosionColor(hex: string): void { this.destruction.setExplosionColor(hex); }
+
   constructor() {
     this.group.add(this.destruction.group);
     this.tractorBeam.visible = false; this.group.add(this.tractorBeam);
