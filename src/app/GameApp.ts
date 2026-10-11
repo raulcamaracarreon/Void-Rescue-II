@@ -19,7 +19,7 @@ import { LandscapePanel } from '../ui/LandscapePanel';
 import { defaultLandscapePreferences, resolveLandscape, sanitizeLandscapePreferences } from '../landscape/LandscapeConfig';
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 
-const LANDSCAPE_SETTINGS_KEY = 'void-rescue.landscape.v1';
+const LANDSCAPE_SETTINGS_KEY = 'void-rescue-ii.landscape.v1';
 function readLandscapePreferences(): LandscapePreferences {
   try { return sanitizeLandscapePreferences(JSON.parse(localStorage.getItem(LANDSCAPE_SETTINGS_KEY) ?? 'null')); }
   catch { return defaultLandscapePreferences(); }
