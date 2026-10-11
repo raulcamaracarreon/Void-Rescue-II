@@ -15,7 +15,7 @@ export type AppMode = 'title' | 'playing' | 'paused' | 'result';
 export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode }
 export interface UiActions {
   start(): void; resume(): void; restart(): void; menu(): void; pause(): void;
-  mute(): void; fullscreen(): void; controller(): void; preferences(value: Preferences): void;
+  mute(): void; fullscreen(): void; controller(): void; landscape(): void; preferences(value: Preferences): void;
   result(): void; records(): void; pilot(value: string): void;
 }
 
@@ -53,6 +53,7 @@ export class Interface {
           <div class="mission-settings"><label>MODO <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label></div>
           <div class="pilot-setting"><span>PILOTO</span>${[0, 1, 2].map(i => `<select class="pilot-initial" aria-label="Inicial ${i + 1}">${[...INITIALS].map(letter => `<option${pilot[i] === letter ? ' selected' : ''}>${letter}</option>`).join('')}</select>`).join('')}<button class="text-button" data-action="records">VER RÉCORDS ↗</button></div>
           <button class="primary" data-action="start">INICIAR VUELO <span>↗</span></button>
+          <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
           <button class="controller-open text-button" data-action="controller">CONFIGURAR MANDO USB ↗</button><p class="controller-status"></p>
           <div class="title-controls"><span><kbd>W A S D</kbd> Pilotar</span><span><kbd>ESPACIO</kbd> Disparar</span><span><kbd>SHIFT</kbd> Bomba</span></div>
           <p class="gamepad-note">Joypad: sur A/× disparar y confirmar · oeste X/□ bomba · norte Y/△ acción/portal<br>Stick/cruceta navegar · este B/○ volver · Start pausa</p>
@@ -80,6 +81,7 @@ export class Interface {
         <label class="setting">Volumen <input id="volume" type="range" min="0" max="100" step="5" aria-label="Volumen"></label>
         <label class="setting">Silenciar audio <input id="muted" type="checkbox"></label>
         <label class="setting">Reducir movimiento y destellos <input id="reduced" type="checkbox"></label>
+        <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
         <label class="setting">Dificultad <select aria-label="Dificultad" class="difficulty-select"></select></label>
         <button class="controller-open text-button" data-action="controller">CONFIGURAR MANDO USB ↗</button><p class="controller-status"></p>
         <button class="primary" data-action="resume">CONTINUAR VUELO <span>↗</span></button>
