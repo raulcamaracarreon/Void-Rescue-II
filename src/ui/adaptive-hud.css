@@ -1,6 +1,5 @@
-/* HUD flotante: UNA sola tinta de contraste, sin fondos ni tarjetas.
-   The palette is derived from the current sky, while a fine contrasting text
-   outline keeps labels legible as mountains pass behind them. */
+/* HUD flotante: una sola tinta de contraste, SIN contornos, sombras ni tarjetas.
+   Legibilidad mediante color sólido, tamaño y peso tipográfico. */
 .flight-hud.combat .mission,
 .flight-hud.combat .coordinates,
 .flight-hud.combat .combat-stats,
@@ -11,9 +10,8 @@
   border-radius: 0;
   box-shadow: none;
   padding: 0;
-  text-shadow: 0 0 1px var(--vr-hud-outline, #000d),
-               0 1px 1px var(--vr-hud-outline, #000d);
-  -webkit-text-stroke: .24px var(--vr-hud-outline, #000d);
+  text-shadow: none;
+  -webkit-text-stroke: 0 transparent;
 }
 .flight-hud.combat .mission {
   top: 18.5%;
@@ -108,4 +106,14 @@
 .flight-hud.combat .combat-stats b,
 .flight-hud.combat .combat-message {
   color: var(--vr-hud-ink, #f8fbff);
+}
+
+/* Force a truly flat glyph fill at every nested text element. Inherited
+   browser text-stroke and legacy shadows must never add a second color. */
+.flight-hud.combat .mission *,
+.flight-hud.combat .coordinates *,
+.flight-hud.combat .combat-stats *,
+.flight-hud.combat .combat-message * {
+  text-shadow: none;
+  -webkit-text-stroke: 0 transparent;
 }
