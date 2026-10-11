@@ -63,8 +63,11 @@ function pickLaserColor(style: LandscapeStyle): string {
 
 /** Choose a complementary tint directly against sky, never against an opaque HUD plate. */
 function inkForSky(hue: number, backdrop: string, target: number): string {
-  const darkText = relativeLuminance(backdrop) > 0.22;
-  return suitableHue(hue % 360, backdrop, target, !darkText);
+  // Mid-tone skies can make both white and black fall short of AAA (7:1).
+  // Evaluate *both* directions and keep the most legible complementary ink.
+  const light = suitableHue(hue % 360, backdrop, target, true);
+  const dark = suitableHue(hue % 360, backdrop, target, false);
+  return contrastRatio(light, backdrop) >= contrastRatio(dark, backdrop) ? light : dark;
 }
 
 /** Complementary hues with luminance-aware contrast, calculated when the sky changes. */
