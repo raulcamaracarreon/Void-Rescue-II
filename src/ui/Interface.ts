@@ -44,7 +44,7 @@ export class Interface {
   constructor(private readonly root: HTMLElement, private readonly actions: UiActions, preferences: Preferences, pilot: string) {
     root.innerHTML = `
       <section class="title-screen" aria-labelledby="game-title">
-        <div class="topline"><span class="brandmark">V<span>R</span></span><span>COLONIAL RESPONSE DIVISION</span><span class="build-tag">OPERACIÓN RESCATE · 0.2</span></div>
+        <div class="topline"><span class="brandmark">V<span>R</span></span><span>COLONIAL RESPONSE DIVISION</span><span class="build-tag">VOID RESCUE II · ALFA</span></div>
         <div class="title-copy">
           <p class="eyebrow"><i></i> SECTOR 07 / PERÍMETRO EXTERIOR</p>
           <h1 id="game-title">VOID<br><span>RESCUE</span><b>↗</b></h1>
@@ -63,7 +63,7 @@ export class Interface {
       </section>
       <section class="flight-hud" aria-label="Instrumentos de vuelo" hidden>
         <header class="instrument-panel">
-          <div class="hud-identity"><span class="brandmark">V<span>R</span></span><p>VOID RESCUE<small>VR—01 / RESPONDER</small></p></div>
+          <div class="hud-identity"><span class="brandmark">V<span>R</span></span><p>VOID RESCUE II<small>VR—01 / RESPONDER</small></p></div>
           <div class="radar-panel"><div class="radar-label"><span>RADAR / PERÍMETRO COMPLETO</span><span>◇ ESTACIÓN <b>▸ NAVE</b></span></div><canvas id="radar" aria-label="Radar panorámico del mundo circular"></canvas><div class="radar-scale"><span>0000</span><span>0600</span><span>1200</span><span>1800</span><span>2400</span></div></div>
           <div class="hud-actions"><button data-action="mute" aria-label="Silenciar audio" title="Silenciar (M)">AUDIO ON</button><button data-action="pause" aria-label="Pausar vuelo" title="Pausa (Esc)">II <span>PAUSA</span></button></div>
         </header>
