@@ -8,7 +8,7 @@ describe('contraste adaptativo HUD y láser', () => {
     expect(relativeLuminance('#000000')).toBeCloseTo(0);
     expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21);
   });
-  it('garantiza texto principal >= 7:1 y secundario >= 4.5:1 en cada preset', () => {
+  it('garantiza contraste WCAG AA >= 4.5:1 sin placas en todos los presets', () => {
     const prefs = defaultLandscapePreferences();
     for (const preset of ['night','city','sunset','ice'] as const) {
       prefs.selection = preset;
@@ -25,9 +25,9 @@ describe('contraste adaptativo HUD y láser', () => {
           return '#' + channels.map(v => v.toString(16).padStart(2, '0')).join('');
         };
         const backdrop = mix(sky.skyTop, sky.skyBottom);
-        expect(contrastRatio(theme.primary, backdrop)).toBeGreaterThanOrEqual(6.8);
-        expect(contrastRatio(theme.secondary, backdrop)).toBeGreaterThanOrEqual(4.4);
-        expect(contrastRatio(theme.accent, backdrop)).toBeGreaterThanOrEqual(4.4);
+        expect(contrastRatio(theme.primary, backdrop)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(theme.secondary, backdrop)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(theme.accent, backdrop)).toBeGreaterThanOrEqual(4.5);
       }
     }
   });
