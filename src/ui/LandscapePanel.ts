@@ -357,7 +357,7 @@ export class LandscapePanel {
   }
 
   private updateDescription(): void {
-    const { name, style } = resolveLandscape(this.preferences, this.currentWave());
+    const { name, style } = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed());
     const suffix = this.preferences.selection === 'cycle' ? ' · cambia en la siguiente oleada' : '';
     this.description.textContent = `${name} · ${style.layers.length} capas · ${this.preferences.mode === 'automatic' ? 'gradiente automático' : 'edición avanzada'}${suffix}`;
   }
@@ -365,7 +365,7 @@ export class LandscapePanel {
   private paintSwatches(): void {
     this.swatches.replaceChildren();
     if (this.preferences.mode !== 'automatic') return;
-    const style = resolveLandscape(this.preferences, this.currentWave()).style;
+    const style = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
     const colors = [style.automatic!.skyColor, ...style.layers.map(layer => layer.color)];
     for (let i = 0; i < colors.length; i++) {
       const swatch = document.createElement('span');
@@ -423,7 +423,7 @@ export class LandscapePanel {
     for (const item of allLandscapeChoices(this.preferences))
       this.selection.add(new Option(item.label, item.id));
     this.selection.add(new Option('Personalizado (sin guardar)', 'custom'));
-    const style = resolveLandscape(this.preferences, this.currentWave()).style;
+    const style = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
     const automatic = style.automatic!;
     this.selection.value = this.preferences.selection;
     this.mode.value = this.preferences.mode;
