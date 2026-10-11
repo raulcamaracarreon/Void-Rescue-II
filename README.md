@@ -7,7 +7,7 @@ Nueva versión independiente, derivada del código funcional de [Void Rescue I](
 - **Paisajes procedurales con paralaje:** montañas y edificios, paletas predefinidas y personalizadas, editor y transición de paisaje al completar cada oleada.
 - **Jugabilidad rediseñada:** enemigos recurrentes por zona y tiempo; modo Rescatista con evacuación de todos los colonos recuperables y modo Defensivo con supervivencia temporizada y mínimo de colonos protegidos.
 
-**Estado actual (11 de octubre de 2026):** el objetivo 1 está implementado en la rama `feat/parallax-landscapes`: cuatro paletas, 2–10 capas de montañas/edificios, cielo y estrellas personalizables, semillas reproducibles, persistencia local y paisajes distintos por oleada. Las reglas de los modos de juego siguen siendo las heredadas de Void Rescue I; el objetivo 2 está pendiente. La clasificación de récords de Void Rescue II utiliza otra clave local para no mezclar puntuaciones.
+**Estado actual (11 de octubre de 2026):** el objetivo 1 está integrado en `main` mediante el [PR #3](https://github.com/raulcamaracarreon/Void-Rescue-II/pull/3): cuatro paletas, 2–10 capas de montañas/edificios, cielo y estrellas personalizables, semillas reproducibles, persistencia local y paisajes distintos por oleada. Las reglas de los modos de juego siguen siendo las heredadas de Void Rescue I; el objetivo 2 está pendiente. La clasificación de récords de Void Rescue II utiliza otra clave local para no mezclar puntuaciones.
 
 **Verificación:** `npm ci`, `npm run typecheck`, 66 pruebas Vitest y `npm run build` aprobados en GitHub Actions; seis recorridos Playwright del editor aprobados en Chromium (rutas WebGPU automática y WebGL2) a 960×540. También se revisaron capturas a 1920×1080 en ambos backends. La revisión perceptiva en una PC real y el conjunto completo de recorridos del juego aún están pendientes.
 
@@ -18,7 +18,6 @@ Nueva versión independiente, derivada del código funcional de [Void Rescue I](
 ```powershell
 git clone https://github.com/raulcamaracarreon/Void-Rescue-II.git
 cd Void-Rescue-II
-git switch feat/parallax-landscapes
 npm ci
 npm run dev
 ```
