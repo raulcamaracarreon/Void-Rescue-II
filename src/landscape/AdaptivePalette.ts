@@ -2,8 +2,11 @@ import type { LandscapeStyle } from './LandscapeConfig';
 
 interface RGB { r: number; g: number; b: number }
 export interface AdaptivePalette {
-  primary: string; secondary: string; accent: string; warning: string;
-  outline: string; laser: string; laserOutline: string;
+  /** One solid color for all telemetry, selected to contrast with the visible sky. */
+  hudInk: string;
+  hudOutline: string;
+  laser: string;
+  laserOutline: string;
 }
 const LASER_NEON_GREEN = '#39ff14';
 const validHex = /^#[\da-f]{6}$/i;
@@ -61,39 +64,43 @@ function pickLaserColor(style: LandscapeStyle): string {
   return suitableHue((hueOf(clash) + 180) % 360, clash, 4.5, relativeLuminance(clash) < 0.2);
 }
 
-/** Choose a complementary tint directly against sky, never against an opaque HUD plate. */
-function inkForSky(hue: number, backdrop: string, target: number): string {
-  // Mid-tone skies can make both white and black fall short of AAA (7:1).
-  // Evaluate *both* directions and keep the most legible complementary ink.
-  const light = suitableHue(hue % 360, backdrop, target, true);
-  const dark = suitableHue(hue % 360, backdrop, target, false);
-  return contrastRatio(light, backdrop) >= contrastRatio(dark, backdrop) ? light : dark;
+/** Choose a single complementary ink (not separate label/accent colors).
+ *  Prefer the least extreme complementary tint passing 7:1, then 4.5:1.
+ *  Neutral black/white are safety fallbacks for midtone or custom skies.
+ */
+export function chooseHudInk(style: LandscapeStyle): string {
+  // The mission/stats HUD occupies the upper portion of the sky; using
+  // its actual gradient color avoids the inaccurate old white-panel baseline.
+  const top = rgb(style.skyTop), bottom = rgb(style.skyBottom);
+  const backdrop = toHex({
+    r: top.r * 0.82 + bottom.r * 0.18,
+    g: top.g * 0.82 + bottom.g * 0.18,
+    b: top.b * 0.82 + bottom.b * 0.18,
+  });
+  const hue = (hueOf(backdrop) + 180) % 360;
+  const preferDark = relativeLuminance(backdrop) >= 0.18;
+  const lightness = preferDark
+    ? [0.18, 0.14, 0.10, 0.06, 0.82, 0.90, 0.96]
+    : [0.82, 0.90, 0.96, 0.18, 0.14, 0.10, 0.06];
+  const candidates = lightness.map(l => hsl(hue, 0.85, l));
+  const neutrals = ['#071019', '#f8fbff'];
+  for (const required of [7, 4.5]) {
+    const complementary = candidates.find(ink => contrastRatio(ink, backdrop) >= required);
+    if (complementary) return complementary;
+  }
+  return [...candidates, ...neutrals].sort((a,b) => contrastRatio(b, backdrop) - contrastRatio(a, backdrop))[0]!;
 }
 
-/** Complementary hues with luminance-aware contrast, calculated when the sky changes. */
+/** Palette is recalculated only when a landscape/wave changes. */
 export function adaptivePalette(style: LandscapeStyle): AdaptivePalette {
-  // HUD data sit in the upper half of the sky, so blend a small amount of the
-  // lower-sky color for advanced gradient landscapes.
-  const bg = toHex({
-    r: rgb(style.skyTop).r * 0.82 + rgb(style.skyBottom).r * 0.18,
-    g: rgb(style.skyTop).g * 0.82 + rgb(style.skyBottom).g * 0.18,
-    b: rgb(style.skyTop).b * 0.82 + rgb(style.skyBottom).b * 0.18,
-  });
-  const darkText = relativeLuminance(bg) > 0.22;
-  const complement = (hueOf(bg) + 180) % 360;
-  const primary = inkForSky(complement, bg, 7);
-  const secondary = inkForSky(complement + 24, bg, 4.5);
-  const accent = inkForSky(complement, bg, 4.5);
-  const warning = inkForSky(28, bg, 4.5);
+  const hudInk = chooseHudInk(style);
   const laser = pickLaserColor(style);
-  // A contrasting border makes a neon projectile readable over BOTH bright sky
-  // and dark mountains as it crosses them during a single flight.
   const laserOutline = relativeLuminance(laser) > 0.3 ? '#060d17' : '#fffdf1';
   return {
-    primary, secondary, accent, warning,
-    // The one-pixel silhouette, not a solid panel, protects readability if
-    // scenery or a different horizon passes behind the text.
-    outline: darkText ? '#ffffffa6' : '#000000dc',
-    laser, laserOutline,
+    hudInk,
+    // Only a thin opposing edge, no filled backgrounds or multicolored labels.
+    hudOutline: relativeLuminance(hudInk) > 0.25 ? '#091119dc' : '#f8fbffcc',
+    laser,
+    laserOutline,
   };
 }
