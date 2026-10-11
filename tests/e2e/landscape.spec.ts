@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
 
 test.beforeEach(async ({ page }, info) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'getGamepads', { configurable: true, value: () => [] }));
@@ -6,7 +7,7 @@ test.beforeEach(async ({ page }, info) => {
   await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
 });
 
-test('permite escoger ambiente y jugar con el paisaje seleccionado', async ({ page }) => {
+test('permite escoger ambiente y jugar con el paisaje seleccionado', async ({ page }, info) => {
   await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
   await expect(dialog).toBeVisible();
@@ -16,6 +17,8 @@ test('permite escoger ambiente y jugar con el paisaje seleccionado', async ({ pa
   await page.getByRole('button', { name: /INICIAR VUELO/ }).click();
   await expect.poll(() => page.evaluate(() => window.__VOID_RESCUE__!.getState().frame)).toBeGreaterThan(30);
   expect(await page.evaluate(() => window.__VOID_RESCUE__!.getMetrics().landscape)).toBe('Ciudad abandonada');
+  await mkdir('docs/screenshots', { recursive: true });
+  await page.screenshot({ path: `docs/screenshots/${info.project.name}-landscape-city.png` });
 });
 
 test('edita capas y colores, guarda y recupera tras recargar', async ({ page }) => {
