@@ -6,7 +6,8 @@ import type { CombatContext, DynamicDirector, EnemyKind } from './types';
 import { spawnEnemy } from './EnemySystem';
 import { releaseTarget } from './ColonistSystem';
 import { deltaX } from './spatial';
-import { wavePressure } from './Progression';
+import { activeEnemyCap, wavePressure } from './Progression';
+export { activeEnemyCap } from './Progression';
 
 const SECTORS = 12;
 const SECTOR_WIDTH = CONFIG.worldWidth / SECTORS;
@@ -22,12 +23,6 @@ export function defenseGoal(wave: number, difficulty: string, colonists: number 
     seconds: Math.min(180, 120 + Math.max(0, wave - 1) * 10),
     minimum: Math.min(colonists, Math.max(1, Math.ceil(colonists / 2) + (rank >= 3 ? 1 : rank <= 1 ? -1 : 0))),
   };
-}
-
-/** Hard caps prevent infinite spawning from becoming an unbounded simulation. */
-export function activeEnemyCap(wave: number, difficulty: string): number {
-  const profile = difficultyProfile(difficulty);
-  return Math.max(5, Math.min(18, Math.round((8 + Math.min(5, Math.max(0, wave - 1))) * profile.enemyCount)));
 }
 
 export function initializeDirector(): DynamicDirector {
