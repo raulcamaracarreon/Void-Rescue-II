@@ -1,6 +1,6 @@
 # Void Rescue II — hoja de ruta técnica e historial
 
-**Estado:** motor de paisajes, biblioteca de 13 mundos, aparición de enemigos clásica/dinámica, misiones y rescate múltiple integrados en `main` (PR #3–#12). El workflow de publicación independiente de Void Rescue II apunta a `main`; la primera activación de GitHub Pages y el balance en una PC real deben comprobarse por separado. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
+**Estado:** **v1.0.0 — cierre del desarrollo activo** (octubre de 2026). Motor de juego, 13 paisajes, biblioteca, misiones y publicación web terminados. Proyecto en mantenimiento correctivo; una futura versión instalable o Steam requeriría una fase aparte. Fuente importada desde [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), rama `master`, el 11-10-2026. Los 128 archivos del árbol base coinciden por nombre, modo y SHA de contenido con el origen. Esta importación conserva una instantánea del código, **no el historial de commits original**.
 
 ## Principio de diseño
 
@@ -117,4 +117,15 @@ Las pruebas E2E a 1920×1080 agotaron sus tiempos en un runner Linux sin GPU ded
 - [x] `version.json` de producción identifica el SHA exacto y el workflow comprueba que la URL pública sirve ese mismo commit.
 - [x] README reescrito para Void Rescue II: enlace propio, modalidades, controles, rescate múltiple, 13 paisajes y biblioteca, conservación local de datos, pruebas y actualización.
 - [x] Manual previo archivado en `docs/README_HISTORICO.md` y guía de activación en `docs/DEPLOYMENT.md`.
-- [ ] Confirmar configuración Pages **Settings → Pages → Source: GitHub Actions**, primer despliegue y respuesta HTTP pública; la habilitación requiere permisos de administración del repositorio.
+- [x] GitHub Pages habilitado y despliegue real verificado por SHA en GitHub Actions.
+
+## Publicación final v1.0.0 y fase de mantenimiento
+
+- [x] Licencia MIT para el código propio, Three.js y otros componentes acreditados según su licencia, y referencia gráfica cuyo origen no se comprobó excluida del paquete.
+- [x] Manifiestos npm actualizados a `1.0.0`.
+- [x] `CHANGELOG.md` y notas completas de la Release.
+- [x] Workflow de Releases preparado para etiquetar `v1.0.0`, adjuntar la compilación web estática y verificar que la etiqueta corresponde a su commit.
+- [x] README documenta la versión oficial, MIT, descarga web y condiciones de una hipotética versión gratuita en Steam.
+- [ ] Confirmación del resultado del workflow de publicación de la Release (se ejecuta tras fusionar estos cambios con `main`).
+
+**Política:** no archivar el repositorio para mantener Pages y los parches de seguridad. No agregar nuevas mecánicas a `v1.0.0`; nuevas versiones funcionales deben quedar fuera de la fase de mantenimiento.
