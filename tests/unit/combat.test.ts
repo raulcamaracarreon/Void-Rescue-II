@@ -198,8 +198,9 @@ describe('modo rescatista', () => {
     s.state.schedule = [];
     tick(s, 1, { x: 0, y: 0, fire: false, portal: true });
     expect(colonist.status).toBe('extracting');
-    tick(s, 70);
+    tick(s, 90, { x: 0, y: 0, fire: false, portal: true });
     expect(colonist.status).toBe('carried');
+    expect(colonist.onboard).toBe(true);
     expect(s.state.score).toBe(COMBAT.catchPoints);
 
     s.state.player.x = s.state.player.previousX = 700;
