@@ -36,6 +36,24 @@ test('genera un gradiente de dos extremos y permite volver a edición avanzada s
   expect(saved.custom.layers[0]!.color).toBe('#da356f');
 });
 
+test('permite ocultar la luna, alternar editores y conservar la preferencia al recargar', async ({ page }) => {
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
+  const checkbox = dialog.getByRole('checkbox', { name: 'Mostrar luna' });
+  await expect(checkbox).toBeChecked();
+  await checkbox.uncheck();
+  expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape))
+    .toMatchObject({ selection: 'custom', custom: { moon: false } });
+  await dialog.getByRole('combobox', { name: 'Modo de edición' }).selectOption('advanced');
+  await expect(checkbox).not.toBeChecked();
+  await dialog.getByRole('button', { name: /LISTO/ }).click();
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Personalizar paisaje' })
+    .getByRole('checkbox', { name: 'Mostrar luna' })).not.toBeChecked();
+});
+
 test('permite escoger ambiente y jugar con el paisaje seleccionado', async ({ page }, info) => {
   await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
