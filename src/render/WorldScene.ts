@@ -10,7 +10,7 @@ import { defaultLandscapePreferences, resolveLandscape } from '../landscape/Land
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 import { ParallaxLandscape } from './ParallaxLandscape';
 import { nearCameraX } from '../core/WorldWrap';
-import { basaltMaterial, beaconMaterial, emission, metal, planetMaterial, skyMaterial } from './materials';
+import { basaltMaterial, beaconMaterial, emission, metal, skyMaterial } from './materials';
 
 function makeRidge(seed: number, depth: number, distant: boolean): Mesh {
   const terrain = new Terrain(seed);
@@ -122,14 +122,15 @@ export class WorldScene {
     this.sky.position.set(0, 52, -170);
     this.backdrop.add(this.sky, this.landscape.group);
 
-    const planet = new Mesh(new SphereGeometry(27, 64, 48), planetMaterial());
-    planet.scale.y = 0.96;
-    this.moon.add(planet);
-    const ring = new Mesh(new SphereGeometry(27.15, 48, 32), emission(0x557e8d));
-    ring.material.transparent = true;
-    ring.material.opacity = 0.045;
-    ring.material.depthWrite = false;
-    this.moon.add(ring);
+    // White, compact moon instead of the oversized textured planet.
+    const lunarDisc = new Mesh(new SphereGeometry(5.2, 40, 24), emission(0xf8fbff));
+    this.moon.add(lunarDisc);
+    const halo = new Mesh(new SphereGeometry(7.2, 40, 24), emission(0xdfeeff));
+    halo.material.transparent = true;
+    halo.material.opacity = 0.1;
+    halo.material.depthWrite = false;
+    halo.position.z = -1;
+    this.moon.add(halo);
     this.moon.position.set(42, 99, -125);
     this.backdrop.add(this.moon);
 
@@ -169,6 +170,7 @@ export class WorldScene {
     if (Array.isArray(previous)) previous.forEach(material => material.dispose());
     else previous.dispose();
     this.stars.visible = style.stars;
+    this.moon.visible = style.moon;
     this.landscape.rebuild(style, this.seed, wave);
   }
 
