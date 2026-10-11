@@ -30,5 +30,7 @@ jobs:
         if: always()
         with:
           name: landscape-screenshots
-          path: docs/screenshots/*landscape-city.png
+          path: |
+            docs/screenshots/*landscape-city.png
+            test-results/**
           if-no-files-found: ignore
