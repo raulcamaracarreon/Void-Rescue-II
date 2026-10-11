@@ -80,6 +80,7 @@ export class GameApp {
       result: () => this.continueResult(), pilot: value => this.records.setPilot(value),
       records: () => { this.setPaused(true); this.saveRecord(); this.recordsPanel.show(); },
     }, this.preferences, this.records.pilot);
+    this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave).style);
     this.controllerPanel = new ControllerPanel(root, this.input.controller, () => { this.input.clear(); });
     this.landscapePanel = new LandscapePanel(root, this.landscapePreferences,
       value => this.saveLandscape(value), () => this.simulation.state.wave);
@@ -218,6 +219,7 @@ export class GameApp {
   private saveLandscape(preferences: LandscapePreferences): void {
     this.landscapePreferences = sanitizeLandscapePreferences(preferences);
     this.graphics.setLandscape(this.landscapePreferences, this.simulation.state.wave);
+    this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave).style);
     try { localStorage.setItem(LANDSCAPE_SETTINGS_KEY, JSON.stringify(this.landscapePreferences)); }
     catch { /* Visual settings remain usable for the current session. */ }
   }
@@ -255,7 +257,9 @@ export class GameApp {
   private continueResult(): void {
     if (this.simulation.nextWave()) {
       this.unlockAudio(); this.audio.resetEvents(); this.lastTeleport = 0;
-      this.graphics.reset(this.simulation.state, false); this.setMode('playing');
+      this.graphics.reset(this.simulation.state, false);
+      this.ui.setLandscapeTheme(resolveLandscape(this.landscapePreferences, this.simulation.state.wave).style);
+      this.setMode('playing');
     } else this.restart();
   }
 

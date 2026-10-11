@@ -1,0 +1,43 @@
+import { describe, expect, it } from 'vitest';
+import { adaptivePalette, contrastRatio, relativeLuminance } from '../../src/landscape/AdaptivePalette';
+import { copyLandscape, defaultLandscapePreferences, LANDSCAPE_PRESETS, resolveLandscape } from '../../src/landscape/LandscapeConfig';
+
+describe('contraste adaptativo HUD y láser', () => {
+  it('preserva luminancia y contraste W3C en los extremos', () => {
+    expect(relativeLuminance('#ffffff')).toBeCloseTo(1);
+    expect(relativeLuminance('#000000')).toBeCloseTo(0);
+    expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21);
+  });
+  it('garantiza texto principal >= 7:1 y secundario >= 4.5:1 en cada preset', () => {
+    const prefs = defaultLandscapePreferences();
+    for (const preset of ['night','city','sunset','ice'] as const) {
+      prefs.selection = preset;
+      for (const mode of ['automatic','advanced'] as const) {
+        prefs.mode = mode;
+        const theme = adaptivePalette(resolveLandscape(prefs, 2).style);
+        const plate = theme.plate.slice(0, 7);
+        expect(contrastRatio(theme.primary, plate)).toBeGreaterThanOrEqual(7);
+        expect(contrastRatio(theme.secondary, plate)).toBeGreaterThanOrEqual(4.5);
+        expect(contrastRatio(theme.accent, plate)).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+  it('usa verde fosforescente sobre montañas distintas, pero complementario si son verdes', () => {
+    const landscape = copyLandscape(LANDSCAPE_PRESETS.night.style);
+    const original = adaptivePalette(landscape);
+    expect(original.laser).toBe('#39ff14');
+    landscape.layers[2]!.color = '#39ff14';
+    const contrasting = adaptivePalette(landscape);
+    expect(contrasting.laser).not.toBe('#39ff14');
+    expect(contrastRatio(contrasting.laser, '#39ff14')).toBeGreaterThanOrEqual(4.5);
+    expect(['#060d17', '#fffdf1']).toContain(contrasting.laserOutline);
+  });
+  it('adapta tonos de HUD según un cielo claro u oscuro', () => {
+    const landscape = copyLandscape(LANDSCAPE_PRESETS.night.style);
+    const dark = adaptivePalette(landscape);
+    landscape.skyTop = '#e6effb'; landscape.skyBottom = '#e6effb';
+    const light = adaptivePalette(landscape);
+    expect(relativeLuminance(dark.primary)).toBeGreaterThan(relativeLuminance(light.primary));
+    expect(light.plate).not.toBe(dark.plate);
+  });
+});

@@ -131,7 +131,8 @@ export class WorldScene {
     halo.material.depthWrite = false;
     halo.position.z = -1;
     this.moon.add(halo);
-    this.moon.position.set(42, 99, -125);
+    // World Y=74 places the moon well below the top panoramic radar.
+    this.moon.position.set(42, 74, -125);
     this.backdrop.add(this.moon);
 
     this.stars = new InstancedMesh(new PlaneGeometry(1, 1), emission(0xb8cfdb), 620);

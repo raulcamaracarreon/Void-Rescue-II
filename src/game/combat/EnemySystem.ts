@@ -60,8 +60,26 @@ export function updateEnemies(ctx: CombatContext, dt: number): void {
         e.x = wrapX(e.x + Math.sign(dx) * kindSpeed * dt, CONFIG.worldWidth);
         e.y += (58 + Math.sin(e.age * 0.8) * 7 - e.y) * dt * 0.6;
       } else {
-        const strafe = (e.kind === 'interceptor' || e.kind === 'crossfire') && Math.abs(dx) < 30 ? -1 : 1;
-        e.x = wrapX(e.x + dx / length * kindSpeed * rage * dt * strafe, CONFIG.worldWidth);
+        // Old behavior switched between chase and retreat at |dx|=30 on every frame,
+        // causing stuttering and rapid left/right flips near that boundary.
+        // Commit to a single flyby direction until the enemy has passed the player
+        // AND spent at least 1.2 real seconds on the maneuver (hysteresis).
+        const flyby = e.kind === 'interceptor' || e.kind === 'crossfire';
+        if (flyby && !e.flybyDirection && Math.abs(dx) < 24) {
+          e.flybyDirection = (e.vx || dx) >= 0 ? 1 : -1;
+          e.flybySeconds = 0;
+        }
+        if (flyby && e.flybyDirection) {
+          e.flybySeconds = (e.flybySeconds ?? 0) + realDt;
+          if (e.flybySeconds >= 1.2 && Math.abs(dx) > 48) {
+            e.flybyDirection = undefined;
+            e.flybySeconds = 0;
+          }
+        }
+        const horizontal = flyby && e.flybyDirection
+          ? e.flybyDirection
+          : dx / length;
+        e.x = wrapX(e.x + horizontal * kindSpeed * rage * dt, CONFIG.worldWidth);
         const jitter = e.kind === 'wraith' ? Math.sin(e.age * 7 + e.id) * 7 : 0;
         e.y += (dy / length * kindSpeed * 0.8 * rage + jitter) * dt;
       }

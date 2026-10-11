@@ -1,3 +1,4 @@
+@import url('./adaptive-hud.css');
 .combat .flight-data{display:none}.combat .coordinates{top:25%;font-size:.58cqw}
 .combat-stats{display:none}.combat .combat-stats{position:absolute;display:flex;left:3.5%;top:25%;gap:1.6cqw;font-family:var(--mono);font-size:.59cqw;color:#91b1b1}
 .combat-stats b{display:block;margin-top:.4cqw;font-size:1.05cqw;color:#d4eee3;font-weight:400;letter-spacing:.04em}
@@ -9,3 +10,5 @@
 .result-dialog{width:34cqw}#result-stats>div{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding:.65cqw 0;color:#90b1ac;font-size:.75cqw}
 #result-stats b{font-family:var(--mono);font-weight:400;color:#d7f6e7}.result-menu{display:block;margin:1.5cqw auto .8cqw}.pad-help{font-family:var(--mono);font-size:.58cqw;line-height:1.5;color:#799d94;margin:1.4cqw 0 0}
 @media(max-width:1400px){.combat .combat-stats{font-size:.78cqw;gap:1.5cqw}.combat-stats b{font-size:1.2cqw}.combat .combat-message{font-size:.85cqw}.world-label{font-size:.75cqw}#result-stats>div{font-size:1cqw}.result-dialog{width:42cqw}.pad-help{font-size:.8cqw}}
+
+
