@@ -72,3 +72,11 @@
   .landscape-rotation-list { grid-template-columns: 1fr; }
   .landscape-library .landscape-label { grid-template-columns: 1fr; }
 }
+
+.landscape-rotation-row { display:flex;align-items:center;gap:.35em;min-width:0; }
+.landscape-rotation-row label { flex:1; min-width:0; }
+.landscape-rotation-row button { font:.75em var(--mono);padding:.15em .35em;
+  color:#dcf8ec;background:#18372f;border:1px solid #76b5a867; }
+.landscape-rotation-row button:disabled { opacity:.3;cursor:default; }
+.landscape-tiny-swatch { display:inline-block;flex:none;width:1.6em;height:1.25em;
+  border-radius:.12em;border:1px solid #ddd8; }
