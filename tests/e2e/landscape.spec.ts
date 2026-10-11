@@ -54,6 +54,33 @@ test('permite ocultar la luna, alternar editores y conservar la preferencia al r
     .getByRole('checkbox', { name: 'Mostrar luna' })).not.toBeChecked();
 });
 
+test('HUD sobre el cielo sin tarjetas ni fondos opacos, con texto legible', async ({ page }, info) => {
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
+  await dialog.getByRole('combobox', { name: 'Estilo de paisaje' }).selectOption('sunset');
+  await dialog.getByRole('button', { name: /LISTO/ }).click();
+  await page.getByRole('button', { name: /INICIAR VUELO/ }).click();
+  const hud = page.locator('.flight-hud.combat');
+  await expect(hud).toBeVisible();
+  const styles = await hud.evaluate(element => {
+    const selector = (part: string) => getComputedStyle(element.querySelector(part)!);
+    return ['.mission', '.coordinates', '.combat-stats', '.combat-message'].map(part => ({
+      background: selector(part).backgroundColor,
+      paddingLeft: selector(part).paddingLeft,
+      borderLeft: selector(part).borderLeftWidth,
+      fontSize: parseFloat(selector(part).fontSize),
+    }));
+  });
+  for (const style of styles) {
+    expect(style.background).toBe('rgba(0, 0, 0, 0)');
+    expect(style.paddingLeft).toBe('0px');
+    expect(style.borderLeft).toBe('0px');
+    expect(style.fontSize).toBeGreaterThanOrEqual(11);
+  }
+  await mkdir('docs/screenshots', { recursive: true });
+  await page.screenshot({ path: `docs/screenshots/${info.project.name}-hud-transparent.png` });
+});
+
 test('permite escoger ambiente y jugar con el paisaje seleccionado', async ({ page }, info) => {
   await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });

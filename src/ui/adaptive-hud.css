@@ -1,70 +1,88 @@
-/* Contrast-aware combat telemetry; minimum readable size at small 16:9 viewports. */
+/* HUD flotante: contraste cromático directo, SIN tarjetas que oculten el paisaje.
+   The palette is derived from the current sky, while a fine contrasting text
+   outline keeps labels legible as mountains pass behind them. */
 .flight-hud.combat .mission,
 .flight-hud.combat .coordinates,
 .flight-hud.combat .combat-stats,
 .flight-hud.combat .combat-message {
   color: var(--vr-hud-primary, #e9f5f0);
-  background: var(--vr-hud-plate, #08151ee6);
-  border-radius: 5px;
-  border-left: 3px solid var(--vr-hud-accent, #7ae8c0);
-  padding: clamp(5px, .52cqw, 12px) clamp(8px, .78cqw, 15px);
-  text-shadow: 0 1px 1px var(--vr-hud-outline, #000a);
-  box-shadow: 0 2px 12px #0000001f;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  text-shadow: 0 0 1px var(--vr-hud-outline, #000d),
+               0 1px 1px var(--vr-hud-outline, #000d);
+  -webkit-text-stroke: .18px var(--vr-hud-outline, #000d);
 }
-.flight-hud.combat .mission { top: 17.5%; max-width: 86%; }
+.flight-hud.combat .mission {
+  top: 18.5%;
+  max-width: 83%;
+  gap: .9cqw;
+}
 .flight-hud.combat .mission p {
-  font-size: clamp(12px, .98cqw, 19px);
+  font-size: clamp(12px, .96cqw, 18px);
   color: var(--vr-hud-primary);
   font-weight: 700;
-  letter-spacing: .045em;
+  letter-spacing: .035em;
 }
 .flight-hud.combat .mission div>span {
   color: var(--vr-hud-secondary);
-  font-size: clamp(11px, .78cqw, 15px);
-  line-height: 1.3;
+  font-size: clamp(11px, .77cqw, 15px);
+  line-height: 1.4;
 }
 .flight-hud.combat .mission-index {
   color: var(--vr-hud-accent);
-  font-size: clamp(12px, 1.03cqw, 20px);
+  font-size: clamp(13px, 1.03cqw, 19px);
   font-weight: 700;
-  border-color: currentColor;
+  background: transparent;
+  border: 1px solid currentColor;
+  padding: .35cqw;
 }
 .flight-hud.combat .mission-status {
   color: var(--vr-hud-accent);
-  font-size: clamp(10px, .73cqw, 15px);
-  letter-spacing: .07em;
-  border-left-color: var(--vr-hud-accent);
+  font-size: clamp(10px, .76cqw, 15px);
+  border-left: 1px solid currentColor;
+  letter-spacing: .045em;
+  white-space: nowrap;
 }
 .flight-hud.combat .coordinates {
-  top: 18%;
-  font-size: clamp(11px, .81cqw, 16px);
+  top: 18.8%;
+  right: 3.5%;
   color: var(--vr-hud-secondary);
+  font-size: clamp(11px, .79cqw, 16px);
 }
-.flight-hud.combat .coordinates b { color: var(--vr-hud-primary); font-weight: 700; }
+.flight-hud.combat .coordinates b {
+  color: var(--vr-hud-primary);
+  font-weight: 700;
+}
 .flight-hud.combat .combat-stats {
   top: 28%;
   left: 3.5%;
-  max-width: 93%;
+  display: flex;
   flex-wrap: wrap;
-  gap: clamp(8px, .9cqw, 18px);
+  max-width: 92%;
+  gap: clamp(13px, 1.25cqw, 22px);
   color: var(--vr-hud-secondary);
-  font-size: clamp(10px, .75cqw, 16px);
-  line-height: 1.3;
+  font-size: clamp(11px, .78cqw, 15px);
+  line-height: 1.2;
 }
-.flight-hud.combat .combat-stats b,
 .flight-hud.combat .combat-stats b {
+  display: block;
   color: var(--vr-hud-primary);
-  font-size: clamp(14px, 1.17cqw, 22px);
+  font-size: clamp(15px, 1.17cqw, 21px);
   font-weight: 700;
+  margin-top: .32cqw;
 }
 .flight-hud.combat .combat-message {
-  top: 40%;
-  max-width: 88%;
+  top: 39%;
+  left: 3.5%;
+  max-width: 82%;
   color: var(--vr-hud-accent);
-  font-size: clamp(11px, .86cqw, 17px);
+  font-size: clamp(11px, .85cqw, 17px);
   font-weight: 700;
   letter-spacing: .01em;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 .flight-hud.combat .world-label {
   font-size: clamp(10px, .72cqw, 16px);
@@ -72,8 +90,8 @@
 }
 .flight-hud.combat .world-label.urgent { color: #ffd68c; }
 @media (max-width: 800px) {
-  .flight-hud.combat .mission { top: 16%; }
-  .flight-hud.combat .coordinates { right: 3.5%; top: 24.5%; }
-  .flight-hud.combat .combat-stats { top: 31.5%; }
+  .flight-hud.combat .mission { top: 16.5%; max-width: 90%; }
+  .flight-hud.combat .coordinates { top: 25%; }
+  .flight-hud.combat .combat-stats { top: 33%; }
   .flight-hud.combat .combat-message { top: 46%; }
 }
