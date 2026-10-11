@@ -22,7 +22,8 @@ export class LandscapePanel {
 
   constructor(root: HTMLElement, initial: LandscapePreferences,
     private readonly onChange: (value: LandscapePreferences) => void,
-    private readonly currentWave: () => number) {
+    private readonly currentWave: () => number,
+    private readonly currentSeed: () => number = () => 0) {
     this.preferences = sanitizeLandscapePreferences(initial);
     this.dialog = document.createElement('dialog');
     this.dialog.className = 'pause-dialog landscape-dialog';
@@ -220,7 +221,7 @@ export class LandscapePanel {
       if (this.preferences.library.length >= 100) { this.description.textContent = 'Máximo de 100 paisajes guardados'; return; }
       this.preferences.library.push({
         id, name, mode: this.preferences.mode,
-        style: copyLandscape(resolveLandscape(this.preferences, this.currentWave()).style),
+        style: copyLandscape(resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style),
       });
       this.preferences.selection = `user:${id}`;
       this.editingId = null;
@@ -230,7 +231,7 @@ export class LandscapePanel {
       const entry = this.currentSaved() ?? this.preferences.library.find(item => item.id === this.editingId);
       if (!entry) return;
       entry.style = copyLandscape(this.preferences.selection === 'custom'
-        ? this.preferences.custom : resolveLandscape(this.preferences, this.currentWave()).style);
+        ? this.preferences.custom : resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style);
       entry.mode = this.preferences.mode;
       this.preferences.selection = `user:${entry.id}`;
       this.editingId = null;
@@ -239,10 +240,10 @@ export class LandscapePanel {
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="duplicate"]')!.addEventListener('click', () => {
       if (this.preferences.library.length >= 100) return;
       const source = this.currentSaved();
-      const name = `${source?.name ?? resolveLandscape(this.preferences, this.currentWave()).name} (copia)`;
+      const name = `${source?.name ?? resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).name} (copia)`;
       const id = crypto.randomUUID();
       this.preferences.library.push({ id, name, mode: this.preferences.mode,
-        style: copyLandscape(resolveLandscape(this.preferences, this.currentWave()).style) });
+        style: copyLandscape(resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style) });
       this.preferences.selection = `user:${id}`;
       this.editingId = null;
       this.commit(); this.render();
@@ -308,7 +309,7 @@ export class LandscapePanel {
   private switchMode(mode: LandscapeEditorMode): void {
     if (mode === 'advanced' && this.preferences.mode === 'automatic') {
       // First switch copies the visible gradient; subsequent switches preserve hand-made layers.
-      const visible = resolveLandscape(this.preferences, this.currentWave()).style;
+      const visible = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
       const style = this.mutableStyle();
       if (!style.advancedEdited) style.layers = visible.layers.map(layer => ({ ...layer }));
       if (!style.advancedEdited) {
@@ -323,7 +324,7 @@ export class LandscapePanel {
 
   private mutableStyle(): LandscapeStyle {
     if (this.preferences.selection !== 'custom') {
-      const current = resolveLandscape(this.preferences, this.currentWave()).style;
+      const current = resolveLandscape(this.preferences, this.currentWave(), this.currentSeed()).style;
       this.editingId = this.currentSaved()?.id ?? null;
       this.preferences.custom = copyLandscape(current);
       this.preferences.custom.advancedEdited = false;
