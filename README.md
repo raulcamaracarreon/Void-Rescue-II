@@ -1,12 +1,12 @@
 # VOID RESCUE II
 
-**Versión oficial estable: [v1.0.3](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.3) · Licencia [MIT](LICENSE) · Estado: mantenimiento (desarrollo activo cerrado).**
+**Versión oficial estable: [v1.0.4](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.4) · Licencia [MIT](LICENSE) · Estado: mantenimiento (desarrollo activo cerrado).**
 
 **Arcade espacial 2.5D de combate, defensa y rescate**, para jugar desde el navegador o en tu computadora. Pilota una nave sobre un planeta circular, protege y evacúa colonos, afronta oleadas de amenazas y descubre paisajes procedurales con paralaje.
 
 ### ▶ [JUGAR VOID RESCUE II EN LÍNEA](https://raulcamaracarreon.github.io/Void-Rescue-II/)
 
-**[GitHub Releases v1.0.3](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.3)** · **[Historial de cambios](CHANGELOG.md)** · **[Código](https://github.com/raulcamaracarreon/Void-Rescue-II)** · **[Publicación web](https://github.com/raulcamaracarreon/Void-Rescue-II/actions/workflows/deploy-pages.yml)** · **[Guía de Pages](docs/DEPLOYMENT.md)**
+**[GitHub Releases v1.0.4](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.4)** · **[Historial de cambios](CHANGELOG.md)** · **[Código](https://github.com/raulcamaracarreon/Void-Rescue-II)** · **[Publicación web](https://github.com/raulcamaracarreon/Void-Rescue-II/actions/workflows/deploy-pages.yml)** · **[Guía de Pages](docs/DEPLOYMENT.md)**
 
 No requiere instalar el juego para jugar en línea. Funciona en navegadores modernos con **WebGPU** o **WebGL2** de respaldo. La URL corresponde **a Void Rescue II**, no al juego original. Si la página aún no abre, consulta la [activación inicial de GitHub Pages](docs/DEPLOYMENT.md#primera-publicación).
 
@@ -32,7 +32,7 @@ No requiere instalar el juego para jugar en línea. Funciona en navegadores mode
 - **Rotación de mundos por oleada:** combina estilos incluidos y personales, marca cuáles participan y elige orden **secuencial** o **aleatorio sin repetición** por tanda, reproducible con la semilla.
 - **HUD flotante adaptativo:** texto de un solo color sólido elegido por contraste con el cielo, sin tarjetas, contornos ni sombras. **Láser del jugador** verde fosforescente o de color complementario si el paisaje requiere más contraste.
 - **Explosiones de naves adaptables al cielo:** chispas y destellos adoptan automáticamente el color complementario de contraste usado por el HUD, también en paisajes personalizados y durante la rotación de mundos.
-- **Motor de nave más grave y descansado (v1.0.3):** se redujo el silbido continuo del motor aproximadamente dos octavas, de unos 600 Hz a unos 150 Hz al acelerar a fondo; conserva la variación de tono según la velocidad y el empuje, sin alterar disparos ni explosiones.
+- **Motor de nave más equilibrado (v1.0.4):** el componente tonal continuo ahora varía aproximadamente de **155 Hz en reposo a 300 Hz a máxima aceleración**. Es más audible que los 150 Hz de v1.0.3 y menos agudo que los 600 Hz originales. Se conservan los cambios de tono con la velocidad y el empuje, sin alterar disparos ni explosiones.
 - **Escenario circular**, colisiones con terreno, estrellas y luna opcionales, distintas familias de naves enemigas, radar panorámico, bombas, portal, audio y efectos.
 - **Mando USB/gamepad configurable**, teclado, pausa, pantalla completa, seis dificultades, récords y progreso por oleadas.
 
@@ -176,9 +176,9 @@ Documentos: **[hoja de ruta](docs/VOID_RESCUE_II_ROADMAP.md)** · **[arquitectur
 
 El **código original de Void Rescue II v1.0.0** se distribuye bajo **[MIT](LICENSE)** (© 2026 Raúl Héctor Cámara Carreón): se permite jugar, estudiar, copiar, modificar y compartir el código gratuitamente, conservando los avisos de autoría y licencia.
 
-- **[GitHub Release v1.0.3](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.3):** etiqueta estable, código fuente y un ZIP del **sitio web compilado**. El ZIP necesita un servidor HTTP local o un alojamiento web; **no es un instalador ni un juego ejecutable para Steam**.
+- **[GitHub Release v1.0.4](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.4):** etiqueta estable, código fuente y un ZIP del **sitio web compilado**. El ZIP necesita un servidor HTTP local o un alojamiento web; **no es un instalador ni un juego ejecutable para Steam**.
 - **[Licencias de terceros](THIRD_PARTY_NOTICES.md):** Three.js (MIT) y herramientas de desarrollo con licencias propias. Los materiales de referencia externos no se relicencian automáticamente.
 - **[MIT y posible Steam gratuito](docs/LICENSING_AND_STEAM.md):** la licencia MIT es generalmente compatible con Steamworks. Steam tiene una tarifa **Steam Direct de 100 USD por aplicación, incluso si el juego es gratuito**, y requiere crear y revisar una aplicación instalable por separado.
 - **[Historial de cambios y mantenimiento](CHANGELOG.md):** resumen del desarrollo y versión estable.
 
-**Estado:** **v1.0.3 publicada como actualización estable del proyecto**, con desarrollo activo cerrado. No se archiva GitHub para que continúen funcionando el despliegue y las futuras correcciones puntuales. La versión en línea sigue disponible; las mejoras nuevas, una compilación de escritorio o la publicación en Steam serían proyectos posteriores separados.
+**Estado:** **v1.0.4 publicada como actualización estable del proyecto**, con desarrollo activo cerrado. No se archiva GitHub para que continúen funcionando el despliegue y las futuras correcciones puntuales. La versión en línea sigue disponible; las mejoras nuevas, una compilación de escritorio o la publicación en Steam serían proyectos posteriores separados.
