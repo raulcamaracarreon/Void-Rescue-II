@@ -10,3 +10,10 @@
 /* Classic/region spawning, mission objective and difficulty choices on title. */
 .mission-settings { flex-wrap: wrap; gap: .6cqw 1cqw; }
 .mission-settings select.spawn-mode-select { max-width: 19cqw; }
+
+/* Independent rescue protocol selector in the pre-flight menu. */
+.protocol-help{max-width:47cqw;margin:-.2cqw 0 .7cqw;font:clamp(10px,.66cqw,14px) var(--mono);line-height:1.45;color:#b9ded1}
+.mission-settings select.rescue-protocol-select{max-width:20cqw}
+.records-filters{display:flex;flex-wrap:wrap;gap:.6em 1em}
+.records-filters label{display:flex;align-items:center;gap:.4em}
+.active-protocol{font-size:.82em}
