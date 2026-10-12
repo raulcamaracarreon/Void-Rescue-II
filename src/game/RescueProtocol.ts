@@ -2,15 +2,15 @@
 export const RESCUE_PROTOCOLS = {
   realistic: {
     label: 'Realista', short: 'Realista',
-    description: 'Pasajeros vulnerables al impacto; la nave reaparece en un sector seguro.',
+    description: 'Cuando tu nave es derrotada y pierdes una vida, los colonos que llevabas caen y pueden morir al llegar al suelo. Si aún tienes vidas, tu nave reaparece en una zona segura, que podría quedar lejos del accidente.',
   },
   protected: {
     label: 'Protegido', short: 'Protegido',
-    description: 'Los pasajeros expulsados sobreviven al aterrizaje, pero siguen expuestos al fuego enemigo.',
+    description: 'Cuando tu nave es derrotada y pierdes una vida, los colonos que llevabas caen, pero sobreviven al aterrizar y puedes volver a rescatarlos. Si aún tienes vidas, tu nave reaparece en una zona segura; los colonos siguen expuestos a los enemigos.',
   },
   local: {
     label: 'Segunda oportunidad', short: 'Segunda oportunidad',
-    description: 'La nave reaparece pronto en el lugar de la derrota, con su escudo temporal, para intentar recuperarlos.',
+    description: 'Cuando tu nave es derrotada y pierdes una vida, los colonos que llevabas caen y pueden morir. Si aún tienes vidas, tu nave reaparece pronto (tras 0.5 s) en el mismo lugar del accidente, con 3 s de escudo temporal para intentar rescatarlos.',
   },
 } as const;
 
