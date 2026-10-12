@@ -1,6 +1,12 @@
 # Historial de cambios — Void Rescue II
 
-Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; **v1.0.1** es una actualización menor de mantenimiento.
+Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; las versiones posteriores son actualizaciones de mantenimiento.
+
+## [v1.0.4] — 11 de octubre de 2026
+
+- Reajustado el tono del motor de la nave tras probar la afinación grave de v1.0.3: el oscilador continuo ahora alcanza **300 Hz** a máxima velocidad y empuje, frente a 151 Hz en v1.0.3 y unos 604 Hz en el motor original.
+- En marcha lenta, el tono comienza en 155 Hz y sube gradualmente con velocidad/empuje; mantiene el oscilador grave, el volumen y los efectos de combate sin modificaciones.
+- Pruebas unitarias actualizadas para el nuevo rango y límites de frecuencia.
 
 ## [v1.0.3] — 11 de octubre de 2026
 
