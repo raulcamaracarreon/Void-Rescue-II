@@ -3,6 +3,11 @@ import { signedWrappedDeltaX } from '../core/WorldWrap';
 import { CONFIG } from '../game/config';
 import { CombatSound, masterBus } from './CombatSound';
 
+/** A low, audible ion-engine layer: roughly D3 (151 Hz) at full speed and thrust. */
+export function engineWhineFrequency(speed: number, thrust: number): number {
+  return 75 + Math.max(0, speed) * 0.6 + Math.max(0, Math.min(1, thrust)) * 34;
+}
+
 export class AudioEngine {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -53,10 +58,10 @@ export class AudioEngine {
   update(thrust: number, speed: number, active: boolean): void {
     if (!this.context || !this.engine || !this.engineGain || !this.engineWhine || !this.engineWhineGain) return;
     const now = this.context.currentTime;
-    // A filtered core plus a speed-linked sine whine reads as an ion drive,
-    // avoiding the low sawtooth tone of a combustion engine.
+    // Keep the bass engine core, but lower the speed-responsive whine from
+    // roughly D5 (~600 Hz) to D3 (~150 Hz) at full speed to reduce fatigue.
     this.engine.frequency.setTargetAtTime(48 + speed * 0.18 + thrust * 18, now, 0.06);
-    this.engineWhine.frequency.setTargetAtTime(145 + speed * 4.2 + thrust * 165, now, 0.045);
+    this.engineWhine.frequency.setTargetAtTime(engineWhineFrequency(speed, thrust), now, 0.045);
     this.engineGain.gain.setTargetAtTime(active ? 0.012 + thrust * 0.032 : 0, now, 0.06);
     this.engineWhineGain.gain.setTargetAtTime(active ? 0.006 + thrust * 0.034 : 0, now, 0.045);
   }

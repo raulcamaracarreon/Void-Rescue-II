@@ -2,6 +2,13 @@
 
 Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; **v1.0.1** es una actualización menor de mantenimiento.
 
+## [v1.0.3] — 11 de octubre de 2026
+
+- Motor de la nave menos agudo durante el vuelo: la capa continua que antes llegaba aproximadamente a **600 Hz (D5)** alcanza ahora unos **150 Hz (D3)** con velocidad y empuje máximos.
+- Se conserva la modulación del tono por velocidad y aceleración y la base grave de la turbina; los disparos, impactos y explosiones no cambian.
+- Pruebas unitarias para el rango de frecuencias del motor.
+- Actualización de mantenimiento; sin cambios a la jugabilidad, misiones, paisajes ni protocolos de rescate.
+
 ## [v1.0.2] — 11 de octubre de 2026
 
 - Nuevos **protocolos de rescate** independientes de la dificultad: Realista (reglas originales), Protegido (supervivencia de pasajeros expulsados al impactar) y Segunda oportunidad (reaparecer en el lugar del accidente después de 0.5 s, con escudo temporal habitual).
