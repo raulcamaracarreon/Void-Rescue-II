@@ -27,12 +27,15 @@ export function hitPlayer(ctx: CombatContext): void {
   const s = ctx.state, p = s.player;
   if (!p.alive || p.invulnerable > 0 || s.outcome !== 'active') return;
   p.alive = false; p.vx = 0; p.vy = 0; s.lives--;
-  s.respawnTimer = COMBAT.respawnSeconds; ctx.emit('player-hit', p.x, p.y);
+  // A prompt return gives passengers a genuine chance to be caught before impact.
+  s.respawnTimer = s.rescueProtocol === 'local' && s.lives > 0 ? 0.5 : COMBAT.respawnSeconds;
+  ctx.emit('player-hit', p.x, p.y);
   let passenger = 0;
   for (const c of s.colonists.filter(c => c.status === 'carried')) {
     // Passenger cabin is not indestructible: a crash releases all occupants.
     // Spread them slightly to avoid stacking several rescueable bodies.
     c.status = 'falling'; c.onboard = false; c.vy = 0;
+    c.crashSafeLanding = s.rescueProtocol === 'protected';
     c.x = wrapX(p.x + (passenger++ - 1) * 1.7, CONFIG.worldWidth); c.y = p.y - 2;
   }
   if (s.lives <= 0) { s.outcome = 'defeat'; ctx.emit('defeat', p.x, p.y); }
@@ -44,13 +47,15 @@ export function updateLife(ctx: CombatContext, dt: number): void {
   if (p.alive || s.outcome !== 'active') return;
   s.respawnTimer -= dt;
   if (s.respawnTimer <= 0) {
-    // Prefer the death location; choose another region if enemies would camp it.
+    // Realistic/Protected may avoid enemy camping; Second chance always returns to the crash sector.
     let x = p.x;
-    if (s.enemies.some(e => Math.abs(deltaX(x, e.x)) < 55)) {
+    if (s.rescueProtocol !== 'local' && s.enemies.some(e => Math.abs(deltaX(x, e.x)) < 55)) {
       x = Array.from({ length: 16 }, (_, i) => wrapX(p.x + i * 150, CONFIG.worldWidth))
         .sort((a, b) => nearest(ctx, b) - nearest(ctx, a))[0]!;
     }
-    p.x = p.previousX = x; p.y = p.previousY = CONFIG.startY;
+    const y = s.rescueProtocol === 'local'
+      ? Math.min(CONFIG.maxAltitude, Math.max(ctx.terrain.height(x) + 6, p.y)) : CONFIG.startY;
+    p.x = p.previousX = x; p.y = p.previousY = y;
     p.alive = true; p.invulnerable = COMBAT.invulnerability;
     ctx.emit('respawn', p.x, p.y);
   }
