@@ -32,6 +32,7 @@ export function updateColonists(ctx: CombatContext, dt: number, beamHeld = false
   let carriedIndex = 0;
   for (const c of s.colonists) {
     if (c.status === 'lost') continue;
+    if (c.status !== 'falling') c.crashSafeLanding = false;
     if (c.owner !== null && !s.enemies.some(e => e.id === c.owner && e.hp > 0)) {
       c.owner = null; c.status = c.status === 'captured' ? 'falling' : 'ground'; c.vy = 0;
     }
@@ -49,13 +50,14 @@ export function updateColonists(ctx: CombatContext, dt: number, beamHeld = false
       const hit = p.alive && sweptHit(p.previousX, p.previousY,
         deltaX(p.previousX, p.x), p.y - p.previousY - (c.y - oldY), { x: c.x, y: oldY }, COMBAT.rescueRadius) !== null;
       if (hit) {
-        c.status = 'carried'; c.vy = 0;
+        c.status = 'carried'; c.vy = 0; c.crashSafeLanding = false;
         c.onboard = s.missionMode === 'rescue';
         if (!c.rescued) { s.score += COMBAT.catchPoints; c.rescued = true; }
         ctx.emit('rescue', c.x, c.y);
       } else if (c.y <= ctx.terrain.height(c.x) + 1.5) {
         c.y = ctx.terrain.height(c.x) + 1.5;
-        c.status = Math.abs(c.vy) <= COMBAT.safeFallSpeed ? 'ground' : 'lost';
+        c.status = c.crashSafeLanding || Math.abs(c.vy) <= COMBAT.safeFallSpeed ? 'ground' : 'lost';
+        c.crashSafeLanding = false;
         c.vy = 0; ctx.emit(c.status === 'lost' ? 'lost' : 'landing', c.x, c.y);
       }
     }

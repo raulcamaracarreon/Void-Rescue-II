@@ -14,6 +14,8 @@ import { difficulty, difficultyProfile } from './Difficulty';
 import type { Difficulty } from './Difficulty';
 import { missionMode } from './MissionMode';
 import { spawnMode } from './SpawnMode';
+import { rescueProtocol } from './RescueProtocol';
+import type { RescueProtocol } from './RescueProtocol';
 import type { SpawnMode } from './SpawnMode';
 import type { MissionMode } from './MissionMode';
 import { startPlayerExtraction } from './combat/ColonistSystem';
@@ -42,7 +44,7 @@ export class Simulation {
   private portalHeld = false;
   readonly context: CombatContext;
 
-  constructor(seed = Number(CONFIG.defaultSeed), scenario: ScenarioName = 'flight-basic', selectedDifficulty: Difficulty = 'normal', selectedMissionMode: MissionMode = 'defense', selectedSpawnMode: SpawnMode = 'classic') {
+  constructor(seed = Number(CONFIG.defaultSeed), scenario: ScenarioName = 'flight-basic', selectedDifficulty: Difficulty = 'normal', selectedMissionMode: MissionMode = 'defense', selectedSpawnMode: SpawnMode = 'classic', selectedRescueProtocol: RescueProtocol = 'realistic') {
     const selected = difficulty(selectedDifficulty);
     const selectedMode = missionMode(selectedMissionMode);
     const profile = difficultyProfile(selected);
@@ -51,6 +53,7 @@ export class Simulation {
       ...emptyCombat(scenario !== 'flight-basic' && scenario !== 'world-seam', profile),
       seed: seed >>> 0, frame: 0, time: 0, distance: 0, laps: 0, scenario,
       difficulty: selected, missionMode: selectedMode, spawnMode: scenario === 'dynamic-basic' ? 'dynamic' : spawnMode(selectedSpawnMode),
+      rescueProtocol: rescueProtocol(selectedRescueProtocol),
       player: { x, y: CONFIG.startY, previousX: x, previousY: CONFIG.startY, vx: 0, vy: 0, facing: 1, thrust: 0, alive: true, invulnerable: 3 },
       shots: [], shotsFired: 0,
     };

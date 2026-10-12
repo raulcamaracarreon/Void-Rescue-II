@@ -1,12 +1,12 @@
 # VOID RESCUE II
 
-**Versión oficial estable: [v1.0.1](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.1) · Licencia [MIT](LICENSE) · Estado: mantenimiento (desarrollo activo cerrado).**
+**Versión oficial estable: [v1.0.2](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.2) · Licencia [MIT](LICENSE) · Estado: mantenimiento (desarrollo activo cerrado).**
 
 **Arcade espacial 2.5D de combate, defensa y rescate**, para jugar desde el navegador o en tu computadora. Pilota una nave sobre un planeta circular, protege y evacúa colonos, afronta oleadas de amenazas y descubre paisajes procedurales con paralaje.
 
 ### ▶ [JUGAR VOID RESCUE II EN LÍNEA](https://raulcamaracarreon.github.io/Void-Rescue-II/)
 
-**[GitHub Releases v1.0.1](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.1)** · **[Historial de cambios](CHANGELOG.md)** · **[Código](https://github.com/raulcamaracarreon/Void-Rescue-II)** · **[Publicación web](https://github.com/raulcamaracarreon/Void-Rescue-II/actions/workflows/deploy-pages.yml)** · **[Guía de Pages](docs/DEPLOYMENT.md)**
+**[GitHub Releases v1.0.2](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.2)** · **[Historial de cambios](CHANGELOG.md)** · **[Código](https://github.com/raulcamaracarreon/Void-Rescue-II)** · **[Publicación web](https://github.com/raulcamaracarreon/Void-Rescue-II/actions/workflows/deploy-pages.yml)** · **[Guía de Pages](docs/DEPLOYMENT.md)**
 
 No requiere instalar el juego para jugar en línea. Funciona en navegadores modernos con **WebGPU** o **WebGL2** de respaldo. La URL corresponde **a Void Rescue II**, no al juego original. Si la página aún no abre, consulta la [activación inicial de GitHub Pages](docs/DEPLOYMENT.md#primera-publicación).
 
@@ -26,6 +26,7 @@ No requiere instalar el juego para jugar en línea. Funciona en navegadores mode
 
 - **Dos sistemas de enemigos independientes:** *Clásico* (apariciones programadas y finitas por oleada) y *Dinámico por zonas* (amenazas recurrentes, cooldown por sector y límites de enemigos simultáneos). **Clásico** es la opción predeterminada.
 - **Dos misiones:** *Rescatista* (evacuar colonos a Fortaleza 01) y *Defensivo* (proteger la colonia), seleccionables con cualquiera de los sistemas de enemigos.
+- **Tres protocolos de rescate:** *Realista*, *Protegido* y *Segunda oportunidad*, seleccionables independientemente de la dificultad.
 - **Rescate con haz de abducción:** mantén **E** o **Y/△** para elevar gradualmente un colono. Al llegar a tu nave, entra en ella; puedes **transportar hasta ocho colonos a la vez** y entregarlos juntos. El HUD indica **A BORDO**.
 - **13 paisajes predefinidos con paralaje**, gradientes automáticos y editor avanzado, además de **hasta 100 paisajes personalizados guardados con nombre**.
 - **Rotación de mundos por oleada:** combina estilos incluidos y personales, marca cuáles participan y elige orden **secuencial** o **aleatorio sin repetición** por tanda, reproducible con la semilla.
@@ -36,12 +37,22 @@ No requiere instalar el juego para jugar en línea. Funciona en navegadores mode
 
 ## Elegir la partida
 
-Antes de **INICIAR VUELO**, escoge un sistema de enemigos, una misión y una dificultad. Estos tres ajustes son independientes.
+Antes de **INICIAR VUELO**, escoge un sistema de enemigos, una misión, una dificultad y un **protocolo de rescate**. Los cuatro ajustes son independientes.
 
 | Sistema | Aparición de enemigos | Fin de la oleada |
 | --- | --- | --- |
 | **Clásico** | Calendario finito de enemigos, creciente con la oleada | Reglas heredadas de Void Rescue I: resolver amenazas y rescates pendientes |
 | **Dinámico por zonas** | Aparecen enemigos cerca de la región explorada, con límites de población y descansos entre apariciones | Se cumple el objetivo de Rescatista o Defensivo, **aunque aún haya enemigos activos** |
+
+### Protocolo de rescate
+
+| Protocolo | Si destruyen la nave con colonos a bordo | Reaparición |
+| --- | --- | --- |
+| **Realista** (predeterminado) | Los pasajeros caen y pueden morir al impactar | Tras 1.6 s de simulación; intenta quedarse cerca, pero se aleja si hay enemigos |
+| **Protegido** | Los pasajeros expulsados aterrizan vivos y pueden recogerse de nuevo; siguen expuestos a enemigos y disparos | Igual que Realista |
+| **Segunda oportunidad** | Los pasajeros caen normalmente y pueden morir | Tras 0.5 s de simulación **en el mismo sector del accidente**, con 3 s de escudo temporal |
+
+El protocolo se elige **antes de iniciar** la partida y no puede cambiarse durante un vuelo. En Segunda oportunidad la nave no recibe vidas gratuitas y **no se garantiza** salvar a los colonos si el accidente ocurre demasiado cerca del suelo. Los récords se separan por combinación de enemigos, misión y protocolo; los anteriores a v1.0.2 se conservan en **Realista**.
 
 ### Objetivos con enemigos dinámicos
 
@@ -164,9 +175,9 @@ Documentos: **[hoja de ruta](docs/VOID_RESCUE_II_ROADMAP.md)** · **[arquitectur
 
 El **código original de Void Rescue II v1.0.0** se distribuye bajo **[MIT](LICENSE)** (© 2026 Raúl Héctor Cámara Carreón): se permite jugar, estudiar, copiar, modificar y compartir el código gratuitamente, conservando los avisos de autoría y licencia.
 
-- **[GitHub Release v1.0.0](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.0):** etiqueta estable, código fuente y un ZIP del **sitio web compilado**. El ZIP necesita un servidor HTTP local o un alojamiento web; **no es un instalador ni un juego ejecutable para Steam**.
+- **[GitHub Release v1.0.2](https://github.com/raulcamaracarreon/Void-Rescue-II/releases/tag/v1.0.2):** etiqueta estable, código fuente y un ZIP del **sitio web compilado**. El ZIP necesita un servidor HTTP local o un alojamiento web; **no es un instalador ni un juego ejecutable para Steam**.
 - **[Licencias de terceros](THIRD_PARTY_NOTICES.md):** Three.js (MIT) y herramientas de desarrollo con licencias propias. Los materiales de referencia externos no se relicencian automáticamente.
 - **[MIT y posible Steam gratuito](docs/LICENSING_AND_STEAM.md):** la licencia MIT es generalmente compatible con Steamworks. Steam tiene una tarifa **Steam Direct de 100 USD por aplicación, incluso si el juego es gratuito**, y requiere crear y revisar una aplicación instalable por separado.
 - **[Cambios v1.0.0 y cierre](CHANGELOG.md):** resumen del desarrollo y versión estable.
 
-**Estado:** **v1.0.0 publicada como versión estable del proyecto**, con desarrollo activo cerrado. No se archiva GitHub para que continúen funcionando el despliegue y las futuras correcciones puntuales. La versión en línea sigue disponible; las mejoras nuevas, una compilación de escritorio o la publicación en Steam serían proyectos posteriores separados.
+**Estado:** **v1.0.2 publicada como actualización estable del proyecto**, con desarrollo activo cerrado. No se archiva GitHub para que continúen funcionando el despliegue y las futuras correcciones puntuales. La versión en línea sigue disponible; las mejoras nuevas, una compilación de escritorio o la publicación en Steam serían proyectos posteriores separados.

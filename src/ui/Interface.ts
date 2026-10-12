@@ -12,12 +12,14 @@ import { MISSION_MODES } from '../game/MissionMode';
 import type { MissionMode } from '../game/MissionMode';
 import { SPAWN_MODES } from '../game/SpawnMode';
 import type { SpawnMode } from '../game/SpawnMode';
+import { RESCUE_PROTOCOLS } from '../game/RescueProtocol';
+import type { RescueProtocol } from '../game/RescueProtocol';
 import { defenseGoal } from '../game/combat/DynamicDirector';
 import { adaptivePalette } from '../landscape/AdaptivePalette';
 import type { LandscapeStyle } from '../landscape/LandscapeConfig';
 
 export type AppMode = 'title' | 'playing' | 'paused' | 'result';
-export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode; spawnMode: SpawnMode }
+export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode; spawnMode: SpawnMode; rescueProtocol: RescueProtocol }
 export interface UiActions {
   start(): void; resume(): void; restart(): void; menu(): void; pause(): void;
   mute(): void; fullscreen(): void; controller(): void; landscape(): void; preferences(value: Preferences): void;
@@ -55,7 +57,8 @@ export class Interface {
           <h1 id="game-title">VOID<br><span>RESCUE</span><b>↗</b></h1>
           <p class="tagline">La colonia está lejos.<br>Tu nave es su primera respuesta.</p>
           <p class="title-description">Rescata colonos y sobrevive a oleadas cada vez más difíciles.<br>Sin última oleada. ¿Hasta dónde llegará tu récord?</p>
-          <div class="mission-settings"><label>ENEMIGOS <select aria-label="Sistema de enemigos" class="spawn-mode-select"></select></label><label>MISIÓN <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label></div>
+          <div class="mission-settings"><label>ENEMIGOS <select aria-label="Sistema de enemigos" class="spawn-mode-select"></select></label><label>MISIÓN <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label><label>RESCATE <select aria-label="Protocolo de rescate" class="rescue-protocol-select"></select></label></div>
+          <p class="protocol-help" aria-live="polite"></p>
           <div class="pilot-setting"><span>PILOTO</span>${[0, 1, 2].map(i => `<select class="pilot-initial" aria-label="Inicial ${i + 1}">${[...INITIALS].map(letter => `<option${pilot[i] === letter ? ' selected' : ''}>${letter}</option>`).join('')}</select>`).join('')}<button class="text-button" data-action="records">VER RÉCORDS ↗</button></div>
           <button class="primary" data-action="start">INICIAR VUELO <span>↗</span></button>
           <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
@@ -88,6 +91,7 @@ export class Interface {
         <label class="setting">Reducir movimiento y destellos <input id="reduced" type="checkbox"></label>
         <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
         <label class="setting">Dificultad <select aria-label="Dificultad" class="difficulty-select"></select></label>
+        <p class="pause-note active-protocol"></p>
         <button class="controller-open text-button" data-action="controller">CONFIGURAR MANDO USB ↗</button><p class="controller-status"></p>
         <button class="primary" data-action="resume">CONTINUAR VUELO <span>↗</span></button>
         <div class="pause-secondary"><button data-action="restart">Reiniciar vuelo</button><button data-action="menu">Volver al menú</button></div>
@@ -124,22 +128,36 @@ export class Interface {
     const missionSelect = get<HTMLSelectElement>('.mission-mode-select');
     missionSelect.innerHTML = Object.entries(MISSION_MODES).map(([id, item]) => `<option value="${id}">${item.label}</option>`).join('');
     missionSelect.value = preferences.missionMode;
+    const rescueSelect = get<HTMLSelectElement>('.rescue-protocol-select');
+    rescueSelect.innerHTML = Object.entries(RESCUE_PROTOCOLS).map(([id, item]) => `<option value="${id}">${item.label}</option>`).join('');
+    rescueSelect.value = preferences.rescueProtocol;
+    const showProtocolHelp = () => {
+      this.root.querySelector('.protocol-help')!.textContent = RESCUE_PROTOCOLS[rescueSelect.value as RescueProtocol].description;
+    };
+    showProtocolHelp();
+    rescueSelect.addEventListener('change', () => {
+      showProtocolHelp();
+      actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked,
+        muted: this.muteCheck.checked, difficulty: difficultySelects[0]!.value as Difficulty,
+        missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode,
+        rescueProtocol: rescueSelect.value as RescueProtocol });
+    });
     const difficultySelects = [...root.querySelectorAll<HTMLSelectElement>('.difficulty-select')];
     for (const select of difficultySelects) {
       select.innerHTML = Object.entries(DIFFICULTIES).map(([id, item]) => `<option value="${id}">${item.label} · ${item.speed}× · ${item.startingLives} naves · ${item.enemyHitsToKill} impactos</option>`).join('');
       select.value = preferences.difficulty;
       select.addEventListener('change', () => {
         difficultySelects.forEach(other => { other.value = select.value; });
-        actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: select.value as Difficulty, missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode });
+        actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: select.value as Difficulty, missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol });
       });
     }
     missionSelect.addEventListener('change', () => actions.preferences({ volume: Number(this.volume.value) / 100,
       reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: difficultySelects[0]!.value as Difficulty,
-      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode }));
+      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol }));
     spawnSelect.addEventListener('change', () => actions.preferences({ volume: Number(this.volume.value) / 100,
       reducedMotion: this.reduced.checked, muted: this.muteCheck.checked,
       difficulty: difficultySelects[0]!.value as Difficulty,
-      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode }));
+      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol }));
 
     root.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button => {
       button.addEventListener('click', () => {
@@ -155,7 +173,7 @@ export class Interface {
     for (const input of [this.volume, this.reduced, this.muteCheck]) input.addEventListener('input', () => {
       actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked,
         difficulty: difficultySelects[0]!.value as Difficulty, missionMode: missionSelect.value as MissionMode,
-        spawnMode: spawnSelect.value as SpawnMode });
+        spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol });
     });
   }
 
@@ -235,6 +253,7 @@ export class Interface {
         ? `Stick / cruceta: elegir · ${padLabels[1]![0]}: confirmar · ${padLabels[5]![0]}: volver`
         : 'Stick / cruceta: elegir · sur A/×: confirmar · este B/○: volver';
     }
+    this.root.querySelector('.active-protocol')!.textContent = `Protocolo de rescate activo: ${RESCUE_PROTOCOLS[state.rescueProtocol].label} (se elige antes de iniciar el vuelo).`;
     this.combatHud(state, metrics, gamepad);
     if (gamepad && padLabels && state.portal.ready && this.root.querySelector('#combat-message')!.textContent?.startsWith('PORTAL LISTO')) {
       this.root.querySelector('#combat-message')!.textContent = `PORTAL LISTO · ${padLabels[3]![0]} cerca del anillo para saltar`;

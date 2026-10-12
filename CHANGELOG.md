@@ -2,6 +2,13 @@
 
 Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; **v1.0.1** es una actualización menor de mantenimiento.
 
+## [v1.0.2] — 11 de octubre de 2026
+
+- Nuevos **protocolos de rescate** independientes de la dificultad: Realista (reglas originales), Protegido (supervivencia de pasajeros expulsados al impactar) y Segunda oportunidad (reaparecer en el lugar del accidente después de 0.5 s, con escudo temporal habitual).
+- Selector en el menú inicial con explicación y preferencia persistente. El protocolo se fija por partida para impedir cambiar de reglas a mitad de vuelo.
+- Récords separados por protocolo, además de sistema de enemigos y misión; compatibilidad con récords previos asignados al modo Realista.
+- Pruebas unitarias y de navegador para supervivencia, ubicación de reaparición y almacenamiento.
+
 ## [v1.0.1] — 11 de octubre de 2026
 
 - Explosiones de naves con partículas y destellos adaptados al color del cielo, reutilizando el contraste complementario del HUD.

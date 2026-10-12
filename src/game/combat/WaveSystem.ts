@@ -8,7 +8,7 @@ import type { DifficultyProfile } from '../Difficulty';
 import { defenseGoal, updateDynamicSpawns } from './DynamicDirector';
 
 export function emptyCombat(enabled: boolean, profile: Pick<DifficultyProfile, 'startingLives' | 'startingBombs'>): CombatState {
-  return { wave: 1, waveStartedAt: 0, enabled, outcome: 'active', spawnMode: 'classic', director: null,
+  return { wave: 1, waveStartedAt: 0, enabled, outcome: 'active', spawnMode: 'classic', rescueProtocol: 'realistic', director: null,
     colonists: [], enemies: [], events: [], schedule: [], spawnIndex: 0,
     score: 0, kills: 0, delivered: 0, lives: profile.startingLives, bombs: profile.startingBombs, respawnTimer: 0,
     portal: { x: 330, y: 46, ready: false, used: false, cooldown: 0 }, bomb: null, summary: null, colonyLost: false };

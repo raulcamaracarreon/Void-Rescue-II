@@ -2,6 +2,7 @@ import type { Random } from '../../core/Random';
 import type { FlightState } from '../Simulation';
 import type { Terrain } from '../Terrain';
 import type { SpawnMode } from '../SpawnMode';
+import type { RescueProtocol } from '../RescueProtocol';
 
 export type EnemyKind = 'harvester' | 'wraith' | 'interceptor' | 'flux' | 'drone' | 'crossfire';
 export type ColonistStatus = 'ground' | 'targeted' | 'captured' | 'extracting' | 'falling' | 'carried' | 'safe' | 'lost';
@@ -10,6 +11,8 @@ export interface Colonist {
   owner: number | null; homeX: number; walkDirection: number; rescued: boolean;
   /** Hidden inside the rescuing craft, as opposed to dangling outside it. */
   onboard?: boolean;
+  /** Only passengers expelled under Protected protocol get a safe crash landing. */
+  crashSafeLanding?: boolean;
 }
 export interface Enemy {
   id: number; kind: EnemyKind; x: number; y: number; vx: number; vy: number;
@@ -32,6 +35,7 @@ export interface DynamicDirector {
 export interface CombatState {
   wave: number; waveStartedAt: number;
   spawnMode: SpawnMode;
+  rescueProtocol: RescueProtocol;
   director: DynamicDirector | null;
   enabled: boolean; outcome: 'active' | 'victory' | 'defeat';
   colonists: Colonist[]; enemies: Enemy[]; events: GameEvent[];
