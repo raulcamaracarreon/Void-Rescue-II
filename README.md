@@ -12,6 +12,16 @@ No requiere instalar el juego para jugar en línea. Funciona en navegadores mode
 
 > **Proyecto independiente:** Void Rescue II se desarrolló a partir de [Void Rescue I](https://github.com/raulcamaracarreon/Void-Rescue-I), sin modificarlo. El generador visual toma como referencia [Landscape Generator — Parallax](https://github.com/raulcamaracarreon/Landscape-Generator-Parallax). Ambos proyectos originales conservan sus repositorios.
 
+## Arte promocional
+
+<p align="center">
+  <a href="docs/art/void-rescue-ii-retro-cover.png">
+    <img src="docs/art/void-rescue-ii-retro-cover.png" alt="Arte promocional retro de Void Rescue II: una nave espacial rescata colonos mientras combate enemigos sobre un planeta alienígena." width="560">
+  </a>
+</p>
+
+<p align="center"><em>Ilustración original inspirada en el arte épico de las portadas de videojuegos y máquinas arcade de finales de los años setenta y principios de los ochenta.</em></p>
+
 ## Qué incluye Void Rescue II
 
 - **Dos sistemas de enemigos independientes:** *Clásico* (apariciones programadas y finitas por oleada) y *Dinámico por zonas* (amenazas recurrentes, cooldown por sector y límites de enemigos simultáneos). **Clásico** es la opción predeterminada.
