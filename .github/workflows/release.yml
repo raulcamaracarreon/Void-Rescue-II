@@ -43,10 +43,10 @@ jobs:
         run: |
           set -euo pipefail
           VERSION=$(node -p 'JSON.parse(require("fs").readFileSync("package.json", "utf8")).version')
-          test "$VERSION" = "1.0.3"
+          test "$VERSION" = "1.0.4"
           test -f LICENSE
           test -f THIRD_PARTY_NOTICES.md
-          test -f docs/releases/v1.0.3.md
+          test -f docs/releases/v1.0.4.md
           test -f dist/index.html
           test -f dist/icon.svg
           test -d dist/assets
@@ -55,7 +55,7 @@ jobs:
           cp LICENSE THIRD_PARTY_NOTICES.md "$RUNNER_TEMP/void-rescue-ii-v$VERSION/"
           printf '{"commit":"%s","version":"%s"}\n' "$GITHUB_SHA" "$VERSION" > "$RUNNER_TEMP/void-rescue-ii-v$VERSION/version.json"
           cat > "$RUNNER_TEMP/void-rescue-ii-v$VERSION/COMO_JUGAR.txt" <<'EOF'
-          VOID RESCUE II v1.0.3 - PAQUETE WEB
+          VOID RESCUE II v1.0.4 - PAQUETE WEB
           -----------------------------------------------------------
           Juego en línea, sin instalar:
           https://raulcamaracarreon.github.io/Void-Rescue-II/
