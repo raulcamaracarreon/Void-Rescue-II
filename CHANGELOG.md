@@ -2,6 +2,13 @@
 
 Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; las versiones posteriores son actualizaciones de mantenimiento.
 
+## [v1.0.5] — 11 de octubre de 2026
+
+- Nuevo **deslizador de tono máximo del motor**, entre **250 y 1000 Hz**, con precisión de 1 Hz (incluye 432 Hz) y valor predeterminado de 300 Hz.
+- Disponible en el menú principal y en pausa; ambos controles están sincronizados. El tono cambia al reanudar sin afectar los efectos de combate ni la jugabilidad.
+- Preferencia guardada localmente, compatible con configuraciones anteriores y saneamiento de valores fuera de rango.
+- Pruebas unitarias y de navegador para la selección, persistencia y modulación de tono.
+
 ## [v1.0.4] — 11 de octubre de 2026
 
 - Reajustado el tono del motor de la nave tras probar la afinación grave de v1.0.3: el oscilador continuo ahora alcanza **300 Hz** a máxima velocidad y empuje, frente a 151 Hz en v1.0.3 y unos 604 Hz en el motor original.

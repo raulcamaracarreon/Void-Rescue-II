@@ -3,10 +3,22 @@ import { signedWrappedDeltaX } from '../core/WorldWrap';
 import { CONFIG } from '../game/config';
 import { CombatSound, masterBus } from './CombatSound';
 
-/** Moderately pitched ion-engine layer: 155 Hz at idle, 300 Hz at full speed and thrust. */
-export function engineWhineFrequency(speed: number, thrust: number): number {
-  return 155 + Math.max(0, Math.min(CONFIG.maxSpeed, speed)) * 1.5
+/** Frequency selected on the settings slider is the whine at full speed and thrust. */
+export const ENGINE_PITCH_MIN = 250;
+export const ENGINE_PITCH_MAX = 1000;
+export const ENGINE_PITCH_DEFAULT = 300;
+
+export function normalizeEnginePitch(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.round(Math.max(ENGINE_PITCH_MIN, Math.min(ENGINE_PITCH_MAX, value)))
+    : ENGINE_PITCH_DEFAULT;
+}
+
+/** Maintain speed/thrust modulation while allowing arbitrary maximum tones. */
+export function engineWhineFrequency(speed: number, thrust: number, selectedPitchHz = ENGINE_PITCH_DEFAULT): number {
+  const base = 155 + Math.max(0, Math.min(CONFIG.maxSpeed, speed)) * 1.5
     + Math.max(0, Math.min(1, thrust)) * 40;
+  return base * normalizeEnginePitch(selectedPitchHz) / ENGINE_PITCH_DEFAULT;
 }
 
 export class AudioEngine {
@@ -18,6 +30,7 @@ export class AudioEngine {
   private engineWhineGain: GainNode | null = null;
   muted = false;
   volume = 0.45;
+  private enginePitchHz = ENGINE_PITCH_DEFAULT;
   private lastEventId = 0;
   private voices = 0;
   private combat: CombatSound | null = null;
@@ -56,13 +69,15 @@ export class AudioEngine {
 
   setMuted(value: boolean): void { this.muted = value; this.setVolume(this.volume); }
 
+  setEnginePitch(value: number): void { this.enginePitchHz = normalizeEnginePitch(value); }
+
   update(thrust: number, speed: number, active: boolean): void {
     if (!this.context || !this.engine || !this.engineGain || !this.engineWhine || !this.engineWhineGain) return;
     const now = this.context.currentTime;
-    // Midrange ion-engine tone: ~300 Hz at full thrust, less shrill than the
-    // original ~600 Hz and more audible than the ~150 Hz maintenance tuning.
+    // The slider controls the whine at maximum speed/thrust; the tone continues
+    // to change smoothly as the ship accelerates or decelerates.
     this.engine.frequency.setTargetAtTime(48 + speed * 0.18 + thrust * 18, now, 0.06);
-    this.engineWhine.frequency.setTargetAtTime(engineWhineFrequency(speed, thrust), now, 0.045);
+    this.engineWhine.frequency.setTargetAtTime(engineWhineFrequency(speed, thrust, this.enginePitchHz), now, 0.045);
     this.engineGain.gain.setTargetAtTime(active ? 0.012 + thrust * 0.032 : 0, now, 0.06);
     this.engineWhineGain.gain.setTargetAtTime(active ? 0.006 + thrust * 0.034 : 0, now, 0.045);
   }
@@ -108,8 +123,8 @@ export class AudioEngine {
     }
   }
 
-  getState(): { initialized: boolean; state: string; muted: boolean; volume: number } {
-    return { initialized: this.context !== null, state: this.context?.state ?? 'locked', muted: this.muted, volume: this.volume };
+  getState(): { initialized: boolean; state: string; muted: boolean; volume: number; enginePitchHz: number } {
+    return { initialized: this.context !== null, state: this.context?.state ?? 'locked', muted: this.muted, volume: this.volume, enginePitchHz: this.enginePitchHz };
   }
 
   dispose(): void { this.engine?.stop(); this.engineWhine?.stop(); void this.context?.close(); }

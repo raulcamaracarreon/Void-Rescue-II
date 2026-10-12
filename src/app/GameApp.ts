@@ -5,7 +5,7 @@ import { IDLE_INPUT, SCENARIOS, Simulation } from '../game/Simulation';
 import type { ScenarioName } from '../game/Simulation';
 import { InputManager } from '../input/InputManager';
 import { FlightRenderer } from '../render/Renderer';
-import { AudioEngine } from '../audio/AudioEngine';
+import { AudioEngine, ENGINE_PITCH_DEFAULT, normalizeEnginePitch } from '../audio/AudioEngine';
 import { Interface } from '../ui/Interface';
 import type { AppMode, Preferences } from '../ui/Interface';
 import { ControllerPanel } from '../ui/ControllerPanel';
@@ -30,7 +30,7 @@ function readLandscapePreferences(): LandscapePreferences {
 }
 
 function readPreferences(): Preferences {
-  const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense', spawnMode: 'classic', rescueProtocol: 'realistic' };
+  const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense', spawnMode: 'classic', rescueProtocol: 'realistic', enginePitchHz: ENGINE_PITCH_DEFAULT };
   try {
     const data: unknown = JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY) ?? localStorage.getItem(LEGACY_SETTINGS_KEY) ?? '{}');
     if (typeof data !== 'object' || !data) return defaults;
@@ -43,6 +43,7 @@ function readPreferences(): Preferences {
       missionMode: missionMode(value.missionMode),
       spawnMode: spawnMode(value.spawnMode),
       rescueProtocol: rescueProtocol(value.rescueProtocol),
+      enginePitchHz: normalizeEnginePitch(value.enginePitchHz),
     };
   } catch { return defaults; }
 }
@@ -96,6 +97,7 @@ export class GameApp {
         rescueProtocol: this.run?.rescueProtocol ?? this.preferences.rescueProtocol }));
     this.audio.setMuted(this.preferences.muted);
     this.audio.setVolume(this.preferences.volume);
+    this.audio.setEnginePitch(this.preferences.enginePitchHz);
     window.addEventListener('blur', this.onBlur);
     document.addEventListener('visibilitychange', this.onVisibility);
     window.addEventListener('pagehide', this.onPageHide);
@@ -243,14 +245,16 @@ export class GameApp {
       this.saveRecord();
     }
     // Rescue protocol is a start-of-run decision: pause settings cannot alter ranking or physics mid-flight.
-    this.preferences = { ...preferences, rescueProtocol: this.run?.rescueProtocol ?? preferences.rescueProtocol };
+    this.preferences = { ...preferences, rescueProtocol: this.run?.rescueProtocol ?? preferences.rescueProtocol,
+      enginePitchHz: normalizeEnginePitch(preferences.enginePitchHz) };
     this.simulation.setDifficulty(preferences.difficulty);
     this.simulation.setMissionMode(preferences.missionMode);
     // Spawn type belongs to the run and can only be chosen on the title screen.
     this.audio.setMuted(preferences.muted);
     this.audio.setVolume(preferences.volume);
+    this.audio.setEnginePitch(this.preferences.enginePitchHz);
     this.ui.syncMuted(preferences.muted);
-    try { localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(preferences)); } catch { /* Session settings still work without storage. */ }
+    try { localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(this.preferences)); } catch { /* Session settings still work without storage. */ }
   }
 
   private async fullscreen(): Promise<void> {

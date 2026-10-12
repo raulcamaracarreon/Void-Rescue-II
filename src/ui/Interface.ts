@@ -17,9 +17,10 @@ import type { RescueProtocol } from '../game/RescueProtocol';
 import { defenseGoal } from '../game/combat/DynamicDirector';
 import { adaptivePalette } from '../landscape/AdaptivePalette';
 import type { LandscapeStyle } from '../landscape/LandscapeConfig';
+import { ENGINE_PITCH_MIN, ENGINE_PITCH_MAX } from '../audio/AudioEngine';
 
 export type AppMode = 'title' | 'playing' | 'paused' | 'result';
-export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode; spawnMode: SpawnMode; rescueProtocol: RescueProtocol }
+export interface Preferences { muted: boolean; volume: number; reducedMotion: boolean; difficulty: Difficulty; missionMode: MissionMode; spawnMode: SpawnMode; rescueProtocol: RescueProtocol; enginePitchHz: number }
 export interface UiActions {
   start(): void; resume(): void; restart(): void; menu(): void; pause(): void;
   mute(): void; fullscreen(): void; controller(): void; landscape(): void; preferences(value: Preferences): void;
@@ -59,6 +60,7 @@ export class Interface {
           <p class="title-description">Rescata colonos y sobrevive a oleadas cada vez más difíciles.<br>Sin última oleada. ¿Hasta dónde llegará tu récord?</p>
           <div class="mission-settings"><label>ENEMIGOS <select aria-label="Sistema de enemigos" class="spawn-mode-select"></select></label><label>MISIÓN <select aria-label="Modo de juego" class="mission-mode-select"></select></label><label>DIFICULTAD <select aria-label="Dificultad" class="difficulty-select"></select></label><label>RESCATE <select aria-label="Protocolo de rescate" class="rescue-protocol-select"></select></label></div>
           <p class="protocol-help" aria-live="polite"></p>
+          <label class="title-engine-pitch engine-pitch-control">TONO MÁXIMO DEL MOTOR <input type="range" class="engine-pitch-slider" min="${ENGINE_PITCH_MIN}" max="${ENGINE_PITCH_MAX}" step="1" aria-label="Tono máximo del motor"><output class="engine-pitch-value">300 Hz</output></label>
           <div class="pilot-setting"><span>PILOTO</span>${[0, 1, 2].map(i => `<select class="pilot-initial" aria-label="Inicial ${i + 1}">${[...INITIALS].map(letter => `<option${pilot[i] === letter ? ' selected' : ''}>${letter}</option>`).join('')}</select>`).join('')}<button class="text-button" data-action="records">VER RÉCORDS ↗</button></div>
           <button class="primary" data-action="start">INICIAR VUELO <span>↗</span></button>
           <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
@@ -87,6 +89,7 @@ export class Interface {
         <p class="eyebrow">VR—01 / SISTEMAS EN ESPERA</p><h2 id="pause-title">Vuelo en pausa<span>.</span></h2>
         <p class="pause-note">El perímetro puede esperar.</p>
         <label class="setting">Volumen <input id="volume" type="range" min="0" max="100" step="5" aria-label="Volumen"></label>
+        <label class="setting pause-engine-pitch engine-pitch-control">Tono máximo del motor <input type="range" class="engine-pitch-slider" min="${ENGINE_PITCH_MIN}" max="${ENGINE_PITCH_MAX}" step="1" aria-label="Tono máximo del motor"><output class="engine-pitch-value">300 Hz</output></label>
         <label class="setting">Silenciar audio <input id="muted" type="checkbox"></label>
         <label class="setting">Reducir movimiento y destellos <input id="reduced" type="checkbox"></label>
         <button class="text-button landscape-open" data-action="landscape">PERSONALIZAR PAISAJE ↗</button>
@@ -122,6 +125,13 @@ export class Interface {
     this.volume = get('#volume'); this.reduced = get('#reduced'); this.muteCheck = get('#muted');
     this.volume.value = String(preferences.volume * 100); this.reduced.checked = preferences.reducedMotion; this.muteCheck.checked = preferences.muted;
     this.syncMuted(preferences.muted);
+    const pitchSliders = [...root.querySelectorAll<HTMLInputElement>('.engine-pitch-slider')];
+    const pitchOutputs = [...root.querySelectorAll<HTMLOutputElement>('.engine-pitch-value')];
+    const showPitch = (pitchHz: number) => {
+      pitchSliders.forEach(slider => { slider.value = String(pitchHz); });
+      pitchOutputs.forEach(output => { output.value = `${pitchHz} Hz`; });
+    };
+    showPitch(preferences.enginePitchHz);
     const spawnSelect = get<HTMLSelectElement>('.spawn-mode-select');
     spawnSelect.innerHTML = Object.entries(SPAWN_MODES).map(([id, item]) => `<option value="${id}">${item.label}</option>`).join('');
     spawnSelect.value = preferences.spawnMode;
@@ -140,7 +150,7 @@ export class Interface {
       actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked,
         muted: this.muteCheck.checked, difficulty: difficultySelects[0]!.value as Difficulty,
         missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode,
-        rescueProtocol: rescueSelect.value as RescueProtocol });
+        rescueProtocol: rescueSelect.value as RescueProtocol, enginePitchHz: Number(pitchSliders[0]!.value) });
     });
     const difficultySelects = [...root.querySelectorAll<HTMLSelectElement>('.difficulty-select')];
     for (const select of difficultySelects) {
@@ -148,16 +158,27 @@ export class Interface {
       select.value = preferences.difficulty;
       select.addEventListener('change', () => {
         difficultySelects.forEach(other => { other.value = select.value; });
-        actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: select.value as Difficulty, missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol });
+        actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: select.value as Difficulty, missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol, enginePitchHz: Number(pitchSliders[0]!.value) });
       });
     }
     missionSelect.addEventListener('change', () => actions.preferences({ volume: Number(this.volume.value) / 100,
       reducedMotion: this.reduced.checked, muted: this.muteCheck.checked, difficulty: difficultySelects[0]!.value as Difficulty,
-      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol }));
+      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol, enginePitchHz: Number(pitchSliders[0]!.value) }));
     spawnSelect.addEventListener('change', () => actions.preferences({ volume: Number(this.volume.value) / 100,
       reducedMotion: this.reduced.checked, muted: this.muteCheck.checked,
       difficulty: difficultySelects[0]!.value as Difficulty,
-      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol }));
+      missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol, enginePitchHz: Number(pitchSliders[0]!.value) }));
+
+    pitchSliders.forEach(slider => slider.addEventListener('input', () => {
+      const pitchHz = Number(slider.value);
+      showPitch(pitchHz);
+      actions.preferences({
+        volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked,
+        muted: this.muteCheck.checked, difficulty: difficultySelects[0]!.value as Difficulty,
+        missionMode: missionSelect.value as MissionMode, spawnMode: spawnSelect.value as SpawnMode,
+        rescueProtocol: rescueSelect.value as RescueProtocol, enginePitchHz: pitchHz,
+      });
+    }));
 
     root.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button => {
       button.addEventListener('click', () => {
@@ -173,7 +194,7 @@ export class Interface {
     for (const input of [this.volume, this.reduced, this.muteCheck]) input.addEventListener('input', () => {
       actions.preferences({ volume: Number(this.volume.value) / 100, reducedMotion: this.reduced.checked, muted: this.muteCheck.checked,
         difficulty: difficultySelects[0]!.value as Difficulty, missionMode: missionSelect.value as MissionMode,
-        spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol });
+        spawnMode: spawnSelect.value as SpawnMode, rescueProtocol: rescueSelect.value as RescueProtocol, enginePitchHz: Number(pitchSliders[0]!.value) });
     });
   }
 
