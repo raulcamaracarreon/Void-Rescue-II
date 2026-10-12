@@ -3,9 +3,10 @@ import { signedWrappedDeltaX } from '../core/WorldWrap';
 import { CONFIG } from '../game/config';
 import { CombatSound, masterBus } from './CombatSound';
 
-/** A low, audible ion-engine layer: roughly D3 (151 Hz) at full speed and thrust. */
+/** Moderately pitched ion-engine layer: 155 Hz at idle, 300 Hz at full speed and thrust. */
 export function engineWhineFrequency(speed: number, thrust: number): number {
-  return 75 + Math.max(0, speed) * 0.6 + Math.max(0, Math.min(1, thrust)) * 34;
+  return 155 + Math.max(0, Math.min(CONFIG.maxSpeed, speed)) * 1.5
+    + Math.max(0, Math.min(1, thrust)) * 40;
 }
 
 export class AudioEngine {
@@ -58,8 +59,8 @@ export class AudioEngine {
   update(thrust: number, speed: number, active: boolean): void {
     if (!this.context || !this.engine || !this.engineGain || !this.engineWhine || !this.engineWhineGain) return;
     const now = this.context.currentTime;
-    // Keep the bass engine core, but lower the speed-responsive whine from
-    // roughly D5 (~600 Hz) to D3 (~150 Hz) at full speed to reduce fatigue.
+    // Midrange ion-engine tone: ~300 Hz at full thrust, less shrill than the
+    // original ~600 Hz and more audible than the ~150 Hz maintenance tuning.
     this.engine.frequency.setTargetAtTime(48 + speed * 0.18 + thrust * 18, now, 0.06);
     this.engineWhine.frequency.setTargetAtTime(engineWhineFrequency(speed, thrust), now, 0.045);
     this.engineGain.gain.setTargetAtTime(active ? 0.012 + thrust * 0.032 : 0, now, 0.06);
