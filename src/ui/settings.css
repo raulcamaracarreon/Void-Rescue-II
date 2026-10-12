@@ -17,3 +17,11 @@
 .records-filters{display:flex;flex-wrap:wrap;gap:.6em 1em}
 .records-filters label{display:flex;align-items:center;gap:.4em}
 .active-protocol{font-size:.82em}
+
+/* Tone is user-selectable without increasing the width of the mission selectors. */
+.title-engine-pitch{display:flex;align-items:center;gap:.75cqw;width:max-content;max-width:100%;margin:-.15cqw 0 .8cqw;font:.68cqw var(--mono);color:#b6dbce;pointer-events:auto}
+.title-engine-pitch input[type=range]{width:12cqw;min-width:8cqw;cursor:pointer}
+.engine-pitch-value{display:inline-block;min-width:3.8cqw;text-align:right;color:var(--mint);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pause-engine-pitch input[type=range]{width:7cqw;min-width:6cqw;cursor:pointer}
+.pause-engine-pitch output{white-space:nowrap}
+@media(max-width:1400px){.title-engine-pitch{font-size:.82cqw}.pause-engine-pitch{font-size:.85cqw}}
