@@ -1,7 +1,7 @@
 {
-  "name": "void-rescue-ii",
+  "name": "void-rescue-iii",
   "private": true,
-  "version": "1.0.5",
+  "version": "0.1.0",
   "type": "module",
   "engines": { "node": ">=22.12.0" },
   "scripts": {
