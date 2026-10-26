@@ -69,7 +69,15 @@ export class LandscapePanel {
             <option value="shuffle">Aleatorio sin repeticiones</option>
           </select>
         </label>
-        <div class="landscape-rotation-list" aria-label="Ambientes incluidos en las oleadas"></div>
+        <p class="landscape-help">Orden secuencial: primero la columna izquierda de arriba abajo y después la derecha. Arrastra un ambiente para reorganizarlo, o elige una posición exacta.</p>
+        <div class="landscape-order-tools">
+          <label>Ambiente <select class="landscape-order-target" aria-label="Ambiente que quieres mover"></select></label>
+          <label>Posición <input class="landscape-order-position" type="number" min="1" step="1" aria-label="Nueva posición del ambiente"></label>
+          <button type="button" data-landscape-order="position">Mover</button>
+          <button type="button" data-landscape-order="first">Al inicio</button>
+          <button type="button" data-landscape-order="last">Al final</button>
+        </div>
+        <div class="landscape-rotation-list" aria-label="Ambientes de las oleadas ordenados por columnas"></div>
       </section>
       <div class="landscape-automatic">
         <p class="landscape-help">Elige únicamente dos colores. El juego interpola los tonos de las capas, de lejos a cerca.</p>
@@ -226,11 +234,88 @@ export class LandscapePanel {
       const id = target.dataset.landscapeId, direction = target.dataset.move;
       if (!id || !direction) return;
       const from = this.preferences.cyclePool.indexOf(id);
-      const to = from + (direction === 'up' ? -1 : 1);
-      if (from < 0 || to < 0 || to >= this.preferences.cyclePool.length) return;
-      [this.preferences.cyclePool[from], this.preferences.cyclePool[to]] =
-        [this.preferences.cyclePool[to]!, this.preferences.cyclePool[from]!];
-      this.commit(); this.renderRotationList();
+      if (direction === 'up' || direction === 'down') {
+        this.moveEnvironment(id, from + (direction === 'up' ? -1 : 1));
+      }
+    });
+    const orderTarget = this.dialog.querySelector<HTMLSelectElement>('.landscape-order-target')!;
+    const orderPosition = this.dialog.querySelector<HTMLInputElement>('.landscape-order-position')!;
+    orderTarget.addEventListener('change', () => {
+      const index = this.preferences.cyclePool.indexOf(orderTarget.value);
+      orderPosition.value = index < 0 ? '' : String(index + 1);
+    });
+    for (const button of this.dialog.querySelectorAll<HTMLButtonElement>('[data-landscape-order]')) {
+      button.addEventListener('click', () => {
+        const id = orderTarget.value;
+        if (!id) return;
+        const action = button.dataset.landscapeOrder;
+        const position = Number(orderPosition.value);
+        if (action === 'position' && (!Number.isInteger(position) || position < 1
+          || position > this.preferences.cyclePool.length)) {
+          orderPosition.setCustomValidity('Elige una posición válida');
+          orderPosition.reportValidity();
+          return;
+        }
+        orderPosition.setCustomValidity('');
+        const to = action === 'first' ? 0
+          : action === 'last' ? this.preferences.cyclePool.length - 1 : position - 1;
+        this.moveEnvironment(id, to);
+      });
+    }
+    orderPosition.addEventListener('input', () => orderPosition.setCustomValidity(''));
+    let draggedId: string | null = null;
+    const clearDropMarker = () => {
+      for (const row of this.rotationList.querySelectorAll('.landscape-drop-before, .landscape-drop-after')) {
+        row.classList.remove('landscape-drop-before', 'landscape-drop-after');
+      }
+    };
+    this.rotationList.addEventListener('dragstart', event => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement) || !target.matches('.landscape-drag-handle')) return;
+      const id = target.dataset.landscapeId;
+      if (!id || !this.preferences.cyclePool.includes(id)) return;
+      draggedId = id;
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', id);
+      }
+    });
+    this.rotationList.addEventListener('dragover', event => {
+      if (!draggedId) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const row = target.closest<HTMLElement>('.landscape-rotation-row[data-active="true"]');
+      if (!row) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      clearDropMarker();
+      const rect = row.getBoundingClientRect();
+      row.classList.add(event.clientY < rect.top + rect.height / 2
+        ? 'landscape-drop-before' : 'landscape-drop-after');
+    });
+    this.rotationList.addEventListener('drop', event => {
+      if (!draggedId) return;
+      const target = event.target;
+      const row = target instanceof Element
+        ? target.closest<HTMLElement>('.landscape-rotation-row[data-active="true"]') : null;
+      if (!row) return;
+      event.preventDefault();
+      const from = this.preferences.cyclePool.indexOf(draggedId);
+      const targetIndex = this.preferences.cyclePool.indexOf(row.dataset.landscapeId ?? '');
+      if (from < 0 || targetIndex < 0) return;
+      const rect = row.getBoundingClientRect();
+      const after = event.clientY >= rect.top + rect.height / 2;
+      const insertionIndex = targetIndex + (after ? 1 : 0);
+      const newIndex = insertionIndex - (from < insertionIndex ? 1 : 0);
+      const movedId = draggedId;
+      draggedId = null;
+      clearDropMarker();
+      orderTarget.value = movedId;
+      this.moveEnvironment(movedId, newIndex);
+    });
+    this.rotationList.addEventListener('dragend', () => {
+      draggedId = null;
+      clearDropMarker();
     });
     this.dialog.querySelector<HTMLButtonElement>('[data-landscape="save-new"]')!.addEventListener('click', () => {
       const name = this.nameInput.value.trim().slice(0, 60) || `Mi paisaje ${this.preferences.library.length + 1}`;
@@ -387,45 +472,109 @@ export class LandscapePanel {
     }
   }
 
+  private moveEnvironment(id: string, to: number): void {
+    const pool = this.preferences.cyclePool;
+    const from = pool.indexOf(id);
+    if (from < 0 || !Number.isInteger(to) || to < 0 || to >= pool.length || from === to) return;
+    pool.splice(from, 1);
+    pool.splice(to, 0, id);
+    this.commit();
+    this.renderRotationList();
+  }
+
   private renderRotationList(): void {
     this.rotationList.replaceChildren();
     const all = allLandscapeChoices(this.preferences);
     const order = new Map(this.preferences.cyclePool.map((id, index) => [id, index]));
-    // Checked entries lead in their actual playback order, unchecked entries follow.
-    all.sort((a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity));
-    for (const item of all) {
-      const row = document.createElement('div');
-      row.className = 'landscape-rotation-row';
-      const label = document.createElement('label');
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.dataset.landscapeId = item.id;
-      checkbox.checked = order.has(item.id);
-      checkbox.setAttribute('aria-label', `Incluir ${item.label} en oleadas`);
-      const style = resolveLandscape({
-        ...this.preferences, selection: item.id as LandscapeSelection,
-      }, this.currentWave(), this.currentSeed()).style;
-      const swatch = document.createElement('span');
-      swatch.className = 'landscape-tiny-swatch';
-      swatch.style.background = `linear-gradient(${style.skyTop}, ${style.layers.at(-1)!.color})`;
-      label.append(checkbox, swatch, document.createTextNode(item.label));
-      row.append(label);
-      const index = order.get(item.id);
-      if (index !== undefined) {
-        for (const [direction, symbol] of [['up', '↑'], ['down', '↓']] as const) {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.textContent = symbol;
-          button.dataset.move = direction;
-          button.dataset.landscapeId = item.id;
-          button.setAttribute('aria-label', `${direction === 'up' ? 'Subir' : 'Bajar'} ${item.label}`);
-          button.disabled = direction === 'up' ? index === 0
-            : index === this.preferences.cyclePool.length - 1;
-          row.append(button);
-        }
-      }
-      this.rotationList.append(row);
+    const active = this.preferences.cyclePool.flatMap(id => all.filter(item => item.id === id));
+    const inactive = all.filter(item => !order.has(item.id));
+    const selection = this.dialog.querySelector<HTMLSelectElement>('.landscape-order-target')!;
+    const position = this.dialog.querySelector<HTMLInputElement>('.landscape-order-position')!;
+    const previousSelection = selection.value;
+    selection.replaceChildren(...active.map(item => new Option(item.label, item.id)));
+    selection.value = active.some(item => item.id === previousSelection)
+      ? previousSelection : (active[0]?.id ?? '');
+    position.max = String(active.length);
+    position.value = selection.value ? String((order.get(selection.value) ?? 0) + 1) : '';
+    for (const button of this.dialog.querySelectorAll<HTMLButtonElement>('[data-landscape-order]')) {
+      button.disabled = active.length < 2;
     }
+    position.disabled = active.length < 2;
+    selection.disabled = active.length < 2;
+
+    const addGroup = (items: typeof all, isActive: boolean): void => {
+      if (!items.length) return;
+      const section = document.createElement('section');
+      section.className = 'landscape-rotation-group';
+      section.dataset.group = isActive ? 'active' : 'inactive';
+      const heading = document.createElement('h4');
+      heading.textContent = isActive
+        ? `En rotación (${items.length}) · izquierda ↓ y después derecha ↓`
+        : `Fuera de la rotación (${items.length})`;
+      section.append(heading);
+      const columns = document.createElement('div');
+      columns.className = 'landscape-rotation-columns';
+      const split = Math.ceil(items.length / 2);
+      for (const portion of [items.slice(0, split), items.slice(split)]) {
+        const column = document.createElement('div');
+        column.className = 'landscape-rotation-column';
+        for (const item of portion) {
+          const row = document.createElement('div');
+          row.className = 'landscape-rotation-row';
+          row.dataset.landscapeId = item.id;
+          row.dataset.active = String(isActive);
+          const label = document.createElement('label');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.dataset.landscapeId = item.id;
+          checkbox.checked = isActive;
+          checkbox.setAttribute('aria-label', `Incluir ${item.label} en oleadas`);
+          const index = order.get(item.id);
+          if (index !== undefined) {
+            const number = document.createElement('span');
+            number.className = 'landscape-rotation-index';
+            number.textContent = String(index + 1).padStart(2, '0');
+            label.append(checkbox, number);
+          } else label.append(checkbox);
+          const style = resolveLandscape({
+            ...this.preferences, selection: item.id as LandscapeSelection,
+          }, this.currentWave(), this.currentSeed()).style;
+          const swatch = document.createElement('span');
+          swatch.className = 'landscape-tiny-swatch';
+          swatch.style.background = `linear-gradient(${style.skyTop}, ${style.layers.at(-1)!.color})`;
+          label.append(swatch, document.createTextNode(item.label));
+          row.append(label);
+          if (index !== undefined) {
+            const handle = document.createElement('button');
+            handle.type = 'button';
+            handle.draggable = true;
+            handle.className = 'landscape-drag-handle';
+            handle.dataset.landscapeId = item.id;
+            handle.textContent = '⠿';
+            handle.title = 'Arrastra para cambiar el orden';
+            handle.setAttribute('aria-label', `Arrastrar ${item.label}`);
+            row.prepend(handle);
+            for (const [direction, symbol] of [['up', '↑'], ['down', '↓']] as const) {
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.textContent = symbol;
+              button.dataset.move = direction;
+              button.dataset.landscapeId = item.id;
+              button.setAttribute('aria-label', `${direction === 'up' ? 'Subir' : 'Bajar'} ${item.label}`);
+              button.disabled = direction === 'up' ? index === 0
+                : index === this.preferences.cyclePool.length - 1;
+              row.append(button);
+            }
+          }
+          column.append(row);
+        }
+        columns.append(column);
+      }
+      section.append(columns);
+      this.rotationList.append(section);
+    };
+    addGroup(active, true);
+    addGroup(inactive, false);
   }
 
   private render(): void {
