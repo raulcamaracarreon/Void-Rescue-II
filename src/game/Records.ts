@@ -10,8 +10,8 @@ import type { RescueProtocol } from './RescueProtocol';
 export interface PlayerRecord {
   id: string; pilot: string; score: number; wave: number; difficulty: Difficulty; missionMode?: MissionMode; spawnMode?: SpawnMode; rescueProtocol?: RescueProtocol; date: string;
 }
-export const RECORDS_KEY = 'void-rescue-ii.records.v1';
-export const PILOT_KEY = 'void-rescue.pilot';
+export const RECORDS_KEY = 'void-rescue-iii.records.v1';
+export const PILOT_KEY = 'void-rescue-iii.pilot.v1';
 export const INITIALS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 export function pilotName(value: unknown): string {
   return typeof value === 'string' && /^[A-Z0-9]{3}$/.test(value) ? value : 'VR1';
