@@ -1,13 +1,11 @@
-name: Publicar Void Rescue II en GitHub Pages
+name: Publicar prototipo Void Rescue III (manual)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
-# Only the newest main build should be published. The website belongs to VR II.
+# VR3 has no automatic publication; launch only after explicit review.
 concurrency:
-  group: void-rescue-ii-pages
+  group: void-rescue-iii-pages
   cancel-in-progress: false
 
 jobs:
