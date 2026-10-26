@@ -34,11 +34,24 @@ test('ordena los ambientes por columnas y permite desplazamientos directos con p
   expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool.at(-1)))
     .toBe('martian_dusk');
 
+  await dialog.locator('.landscape-drag-handle[data-landscape-id="martian_dusk"]').dragTo(
+    dialog.locator('.landscape-rotation-row[data-active="true"][data-landscape-id="night"]'),
+    { targetPosition: { x: 2, y: 2 } },
+  );
+  expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool[0]))
+    .toBe('martian_dusk');
+  await dialog.getByRole('checkbox', { name: 'Incluir Ciudad abandonada en oleadas' }).uncheck();
+  const withoutCity = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool);
+  expect(withoutCity).not.toContain('city');
+  await expect(dialog.locator('.landscape-rotation-group[data-group="inactive"]'))
+    .toContainText('Ciudad abandonada');
+
   await dialog.getByRole('button', { name: /LISTO/ }).click();
   await page.reload();
   await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
-  expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool.at(-1)))
-    .toBe('martian_dusk');
+  const saved = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool);
+  expect(saved[0]).toBe('martian_dusk');
+  expect(saved).not.toContain('city');
 });
 
 test('permite guardar varios mundos propios y agregarlos a la rotación de oleadas', async ({ page }) => {
