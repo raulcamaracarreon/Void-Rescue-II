@@ -1,3 +1,5 @@
+> **Histórico heredado de VR2**: las versiones siguientes corresponden exclusivamente al proyecto anterior. El prototipo VR3 comienza en 0.1.0 y su progreso se registra en [docs/VR3_ROADMAP.md](docs/VR3_ROADMAP.md).
+
 # Historial de cambios — Void Rescue II
 
 Este historial documenta las versiones oficiales de **Void Rescue II**. El desarrollo activo terminó con **v1.0.0**; las versiones posteriores son actualizaciones de mantenimiento.
