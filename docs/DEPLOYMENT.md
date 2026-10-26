@@ -1,3 +1,5 @@
+> **ARCHIVO HISTÓRICO DE VOID RESCUE II.** Estas instrucciones se refieren al repositorio y sitio de VR2, no a la publicación del nuevo prototipo VR3. VR3 no dispone aún de repositorio ni sitio propios. Consulta [VR3_LOCAL_SETUP.md](VR3_LOCAL_SETUP.md) para trabajar con el prototipo. No uses este documento para publicar VR3.
+
 # Publicar Void Rescue II en GitHub Pages
 
 **Sitio objetivo:** https://raulcamaracarreon.github.io/Void-Rescue-II/
