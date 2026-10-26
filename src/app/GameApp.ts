@@ -21,9 +21,8 @@ import { LandscapePanel } from '../ui/LandscapePanel';
 import { defaultLandscapePreferences, resolveLandscape, sanitizeLandscapePreferences } from '../landscape/LandscapeConfig';
 import type { LandscapePreferences } from '../landscape/LandscapeConfig';
 
-const LANDSCAPE_SETTINGS_KEY = 'void-rescue-ii.landscape.v1';
-const GAME_SETTINGS_KEY = 'void-rescue-ii.preferences.v1';
-const LEGACY_SETTINGS_KEY = 'void-rescue.preferences';
+const LANDSCAPE_SETTINGS_KEY = 'void-rescue-iii.landscape.v1';
+const GAME_SETTINGS_KEY = 'void-rescue-iii.preferences.v1';
 function readLandscapePreferences(): LandscapePreferences {
   try { return sanitizeLandscapePreferences(JSON.parse(localStorage.getItem(LANDSCAPE_SETTINGS_KEY) ?? 'null')); }
   catch { return defaultLandscapePreferences(); }
@@ -32,7 +31,7 @@ function readLandscapePreferences(): LandscapePreferences {
 function readPreferences(): Preferences {
   const defaults: Preferences = { muted: false, volume: 0.45, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'normal', missionMode: 'defense', spawnMode: 'classic', rescueProtocol: 'realistic', enginePitchHz: ENGINE_PITCH_DEFAULT };
   try {
-    const data: unknown = JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY) ?? localStorage.getItem(LEGACY_SETTINGS_KEY) ?? '{}');
+    const data: unknown = JSON.parse(localStorage.getItem(GAME_SETTINGS_KEY) ?? '{}');
     if (typeof data !== 'object' || !data) return defaults;
     const value = data as Record<string, unknown>;
     return {
