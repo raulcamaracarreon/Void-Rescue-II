@@ -1,13 +1,10 @@
-name: Validar Void Rescue II
+name: Validar prototipo Void Rescue III (manual)
 
 on:
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
-  group: vr2-verify-${{ github.ref }}
+  group: vr3-verify-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
