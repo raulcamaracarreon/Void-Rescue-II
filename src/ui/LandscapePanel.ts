@@ -30,7 +30,7 @@ export class LandscapePanel {
     this.dialog.className = 'pause-dialog landscape-dialog';
     this.dialog.setAttribute('aria-label', 'Personalizar paisaje');
     this.dialog.innerHTML = `
-      <p class="eyebrow">VOID RESCUE II / MUNDO PROCEDURAL</p>
+      <p class="eyebrow">VOID RESCUE III / MUNDO PROCEDURAL</p>
       <h2>Personalizar paisaje<span>.</span></h2>
       <p class="landscape-help">Un gradiente automático entre el color del cielo y el primer plano, o control individual de cada capa. Los cambios se aplican al instante.</p>
       <div class="landscape-selection-row">
