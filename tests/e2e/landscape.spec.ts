@@ -10,6 +10,37 @@ test.beforeEach(async ({ page }, info) => {
   await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
 });
 
+test('ordena los ambientes por columnas y permite desplazamientos directos con persistencia', async ({ page }) => {
+  await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
+  const active = dialog.locator('.landscape-rotation-group[data-group="active"]');
+  const columns = active.locator('.landscape-rotation-column');
+  const original = await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool);
+  expect(original).toHaveLength(13);
+  expect(await columns.nth(0).locator('.landscape-rotation-row').count()).toBe(7);
+  expect(await columns.nth(1).locator('.landscape-rotation-row').count()).toBe(6);
+  expect(await columns.nth(0).locator('.landscape-rotation-row').evaluateAll(rows =>
+    rows.map(row => (row as HTMLElement).dataset.landscapeId))).toEqual(original.slice(0, 7));
+  expect(await columns.nth(1).locator('.landscape-rotation-row').evaluateAll(rows =>
+    rows.map(row => (row as HTMLElement).dataset.landscapeId))).toEqual(original.slice(7));
+
+  const selected = dialog.getByRole('combobox', { name: 'Ambiente que quieres mover' });
+  await selected.selectOption('martian_dusk');
+  await dialog.getByRole('spinbutton', { name: 'Nueva posición del ambiente' }).fill('1');
+  await dialog.getByRole('button', { name: 'Mover', exact: true }).click();
+  expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool[0]))
+    .toBe('martian_dusk');
+  await dialog.getByRole('button', { name: 'Al final' }).click();
+  expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool.at(-1)))
+    .toBe('martian_dusk');
+
+  await dialog.getByRole('button', { name: /LISTO/ }).click();
+  await page.reload();
+  await page.waitForFunction(() => Boolean(window.__VOID_RESCUE__));
+  expect(await page.evaluate(() => window.__VOID_RESCUE__!.getState().landscape.cyclePool.at(-1)))
+    .toBe('martian_dusk');
+});
+
 test('permite guardar varios mundos propios y agregarlos a la rotación de oleadas', async ({ page }) => {
   await page.getByRole('button', { name: /PERSONALIZAR PAISAJE/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Personalizar paisaje' });
