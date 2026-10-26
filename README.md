@@ -98,6 +98,7 @@ Abre **PERSONALIZAR PAISAJE** desde el título o la pausa:
 - **Avanzado (por capa):** configura por separado el tipo, el color, la amplitud y el detalle. También puedes ajustar semillas, estrellas y luna.
 - **Mi biblioteca:** **Guardar nuevo**, **Guardar cambios**, **Duplicar**, **Renombrar** o **Eliminar** mundos con nombre. Los presets originales permanecen intactos. Admite **hasta 100 paisajes personales**.
 - **Ambientes de las oleadas:** marca los paisajes (predefinidos o guardados) que quieres incluir, cambia su orden y elige rotación **Secuencial** o **Aleatoria sin repeticiones**. Pueden participar **hasta 113 ambientes** si guardas los 100 personales y seleccionas los 13 originales.
+  - **Mejora del editor (rama `feat/landscape-order-editor`, pendiente de validación local):** los activos se muestran primero, numerados en dos columnas de lectura vertical (izquierda de arriba abajo y después derecha); los excluidos aparecen aparte. Se permite arrastrar entre posiciones, subir/bajar, mover directamente a una posición y enviar un ambiente al inicio o al final. No cambia los presets ni el formato de almacenamiento.
 
 Los paisajes personales conservan sus capas y modo de edición. Los datos del editor anterior se migran para mantener el borrador personalizado que ya tuvieras.
 
