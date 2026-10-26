@@ -1,127 +1,52 @@
-# AGENTS.md — reglas de trabajo de VOID RESCUE
+# AGENTS.md — instrucciones de desarrollo de VOID RESCUE III
 
-## Prioridad de instrucciones
+## Identidad y alcance vigente
 
-Estas reglas se aplican a todo el repositorio. Lee también `GAME_DESIGN.md`, `ACCEPTANCE_CRITERIA.md`, `PLAN.md` y los documentos de `docs/` antes de implementar.
+Este árbol es el **prototipo VR3 v0.1.0**, inicialmente preparado desde Void Rescue II. La aplicación anterior se conserva intacta en el repositorio/ramas de su lanzamiento. VR3 todavía no está publicado ni ha pasado verificaciones locales.
 
-Si aparece una contradicción, conserva este orden:
+Prioridad para los agentes que trabajen en la rama/proyecto VR3:
 
-1. Solicitud explícita más reciente del usuario.
-2. `AGENTS.md`.
-3. `ACCEPTANCE_CRITERIA.md`.
-4. `GAME_DESIGN.md`.
-5. `PLAN.md`.
+1. Instrucciones explícitas más recientes del usuario.
+2. Este `AGENTS.md`.
+3. `docs/VR3_ROADMAP.md` y `docs/VR3_ARCHITECTURE.md`.
+4. Criterios de aceptación y documentación técnica de la base VR2 cuando no contradigan los puntos anteriores.
 
-No resuelvas decisiones importantes mediante suposiciones silenciosas. Documenta la decisión o pregunta al usuario cuando cambie alcance, identidad, controles o arquitectura.
+Antes de programar, examinar archivos reales y pruebas. No asumir nombres, tipos o rutas. Cambios pequeños, comprobables y localizados. Actualizar documentación después de modificar comportamiento.
 
-## Alcance autorizado
+## Metas aprobadas
 
-Construye únicamente el vertical jugable definido como **Milestone 1**. No agregues metaprogresión, inventario, campaña, multijugador, backend, cuentas, monetización, editor de niveles ni servicios externos.
+- Partir de la lógica de combate, rescate, simulación, colisiones, controles, cámara y oleadas existente en VR2.
+- Mejorar la experiencia de rotación de ambientes: disposición vertical en columnas, selección rápida de posición, arrastre y accesibilidad.
+- Diseñar capas visuales opcionales de primer plano (rejas, cercas, árboles, siluetas y otras); permitir oclusión visual sin convertirlas automáticamente en colisiones.
+- Desarrollar gradualmente herramientas de dibujo sencillas y configuraciones exportables.
+- Agregar perfiles de vehículo (inicialmente helicóptero, después otros) y familias nuevas de enemigos (helicópteros, drones, aviones, defensas), pero no declarar que existen antes de implementarlos y probarlos.
 
-No lances subagentes, equipos paralelos ni ejecuciones masivas sin autorización explícita del usuario. Mantén el consumo controlado.
+## Arquitectura conservada
 
-## Identidad y propiedad intelectual
+- TypeScript estricto, Vite, Three.js y renderer WebGPU con respaldo WebGL2.
+- Separar estado del juego y simulación 2D del renderizado 2.5D.
+- Paso de simulación fijo; mantener determinismo por semilla; mundo circular con costura limpia.
+- No reescribir de golpe los módulos existentes ni duplicar todo el combate para cambiar un modelo gráfico.
+- Preferir contratos explícitos y variantes configurables; sin servicios externos ni cuentas salvo pedido específico.
+- No añadir dependencias salvo necesidad demostrada.
+- Mantener interacción de teclado/gamepad, teclado accesible para listas, reducción de movimiento y opciones de legibilidad para oclusión.
+- Evitar XSS mediante inserción segura de nombres, validar JSON/importaciones y preservar los mundos del usuario.
 
-- El nombre de trabajo y nombre visible es **VOID RESCUE**.
-- Trátalo como sucesor espiritual, no como remake oficial.
-- No uses `Stargate`, `Defender`, nombres de personajes, logotipos, sprites, sonidos, música, tipografías distintivas ni diseños identificables de terceros en el producto.
-- `references/void_rescue.p8` se usa para comprender mecánicas y estados.
-- Crea geometría, materiales, interfaz, sonidos y denominaciones originales.
-- No descargues recursos con licencias ambiguas. Para el Milestone 1, prefiere geometría procedural y audio sintetizado propio.
+## Aislamiento de producto
 
-## Tecnologías requeridas
+- Nunca apuntar VR3 a la URL de Pages de VR2 ni etiquetar releases como v1.0.5.
+- Usar almacenamiento de VR3, sin migración automática destructiva desde VR2.
+- Mantener los workflows de VR3 **manuales** mientras no se autorice publicación.
+- No fusionar `feat/void-rescue-iii-bootstrap` dentro de la rama `main` de VR2. Su destino es un **repositorio nuevo Void-Rescue-III**.
+- Conservar licencia MIT y avisos de terceros pertinentes.
 
-- TypeScript estricto.
-- Vite.
-- Three.js.
-- `WebGPURenderer`, con su backend WebGL2 de respaldo.
-- Three.js Shading Language (TSL) para efectos compatibles con la arquitectura de nodos.
-- Vitest para lógica de simulación.
-- Playwright para pruebas end-to-end, capturas y recorridos jugables automatizados.
-- Web Audio API para efectos de sonido originales y reproducibles.
+## Verificación requerida
 
-No incorpores React, un motor de físicas, ECS externo, backend o Web Workers en el primer hito salvo necesidad demostrada y documentada.
+1. `npm run build` (incluye TypeScript).
+2. `npm run test` (Vitest).
+3. `npx playwright test tests/e2e/landscape.spec.ts`.
+4. Suites adicionales de rescate, oleadas, mandos y backend cuando se cambie jugabilidad.
+5. Prueba visual real de lista de ambientes, persistencia, orden, drag-and-drop, pantallas reducidas, y luego editor/capas cuando existan.
+6. Documentar resultados y pendientes sin inventar pruebas aprobadas.
 
-## Principios de arquitectura
-
-- Separa simulación y renderizado.
-- La simulación vive en coordenadas 2D del mundo; la profundidad Z es principalmente visual.
-- Usa paso fijo de simulación, objetivo de 60 actualizaciones por segundo.
-- El resultado debe ser determinista con una semilla configurable.
-- El mundo horizontal es circular; usa funciones comunes para distancia, interpolación y envoltura.
-- No acoples reglas de juego directamente a mallas de Three.js.
-- Usa pools para proyectiles y partículas si la medición muestra presión de asignación.
-- Mantén módulos pequeños con interfaces explícitas y evita un único archivo monolítico.
-- Fija versiones compatibles en el lockfile; no dependas de importaciones CDN.
-
-## Arquitectura visual
-
-- El juego es 2.5D: modelos y luces 3D con jugabilidad restringida a un plano.
-- Usa cámara ortográfica y composición 16:9.
-- La legibilidad jugable tiene prioridad sobre el realismo fotográfico.
-- La nave, los disparos, los colonos y las amenazas deben reconocerse instantáneamente.
-- Limita bloom, sacudida de cámara y aberraciones para no ocultar información.
-- Incluye una opción para reducir destellos y sacudida.
-
-## Accesibilidad y entrada
-
-- Teclado y gamepad desde el primer hito.
-- Permite reasignación posterior; centraliza las acciones en un `InputManager`.
-- Incluye pausa, reinicio y silencio.
-- No dependas exclusivamente del color para comunicar estados críticos.
-
-## Método de trabajo
-
-1. Inspecciona todos los documentos y el `.p8`.
-2. Verifica versiones actuales y compatibilidad antes de instalar.
-3. Actualiza `PLAN.md` sin borrar decisiones previas.
-4. Implementa en incrementos pequeños y ejecutables.
-5. Después de cada sistema importante, ejecuta las pruebas relacionadas.
-6. Expón escenas deterministas de prueba y estado de diagnóstico.
-7. Abre el juego con Playwright, toma capturas y revisa problemas visuales reales.
-8. No marques el hito como terminado si sólo compila.
-
-## Interfaz de diagnóstico obligatoria
-
-Expón en desarrollo una interfaz de sólo diagnóstico en `window.__VOID_RESCUE__` con, como mínimo:
-
-- `getState()`;
-- `loadScenario(name, seed?)`;
-- `setPaused(value)`;
-- `step(frames)` cuando sea técnicamente razonable;
-- `getMetrics()`;
-- `restart()`.
-
-Debe permitir a Playwright comprobar estados sin reemplazar las pruebas realizadas mediante controles reales.
-
-Escenarios mínimos:
-
-- `combat-basic`;
-- `abduction-start`;
-- `falling-colonist`;
-- `portal-ready`;
-- `wave-near-complete`;
-- `player-near-death`.
-
-## Verificación obligatoria
-
-Antes de finalizar:
-
-- `npm run build` debe concluir sin errores.
-- El chequeo de tipos debe concluir sin errores.
-- Las pruebas unitarias deben pasar.
-- Las pruebas Playwright deben pasar en Chromium.
-- Debe existir al menos una captura revisable del vertical jugable.
-- Debe probarse la ruta WebGL2 de respaldo cuando el entorno lo permita.
-- Registra comandos, resultados y limitaciones honestamente en `README.md`.
-
-Si una verificación no puede ejecutarse por limitaciones del entorno, no inventes el resultado: explica exactamente qué quedó sin comprobar.
-
-## Disciplina de cambios
-
-- Conserva los archivos de referencia sin modificaciones.
-- No borres trabajo del usuario.
-- No reescribas todo el proyecto para resolver un defecto localizado.
-- Crea un punto de control de Git al terminar una fase estable, si el repositorio permite commits.
-- Mantén `PLAN.md` y `README.md` sincronizados con el estado real.
-
+El esquema completo de fases y límites está en `docs/VR3_ROADMAP.md`. Los artefactos VR2 previos son referencias, no prueba de que las funciones planeadas en VR3 ya existan.
