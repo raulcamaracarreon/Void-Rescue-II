@@ -241,3 +241,17 @@ Desarrollo aislado en `feat/parallax-landscapes` del nuevo repositorio `Void-Res
 - Control: diálogo accesible desde título/pausa, teclado/ratón/mando (navegación básica), edición aplicada en vivo.
 - Comprobación automatizada: TypeScript, 66 pruebas unitarias y compilación aprobadas; 6 tests E2E de paisajes aprobados a 960×540 en ambos backends; capturas a 1920×1080 obtenidas en ambos.
 - Pendiente: evaluación visual y de rendimiento con GPU real, recorrido completo de pruebas originales y revisión del diseño de interacción con el usuario. Las reglas de combate/oleadas se mantienen intactas hasta el objetivo 2.
+
+## Mejora de interfaz pendiente de verificación — orden de paisajes (2026-10-25)
+
+Rama aislada: `feat/landscape-order-editor`. No debe publicarse ni fusionarse con `main` sin prueba local y aprobación del usuario.
+
+- [x] Construir lista de rotación con orden de lectura por columnas (izquierda de arriba abajo, después derecha), numeración explícita y separación de ambientes activos/inactivos.
+- [x] Incorporar arrastre y soltado para ambientes activos; mantener flechas y añadir movimiento directo a posición, inicio o final como alternativas de teclado.
+- [x] Conservar el orden en `cyclePool` y el guardado existente en `localStorage`; no modificar simulación, enemigos, terrenos ni configuración personal.
+- [x] Añadir cobertura Playwright de orden por columnas, movimientos directos y persistencia al recargar.
+- [ ] Ejecutar `npm run build`, `npm run test` y `npm run test:e2e` en una copia local.
+- [ ] Comprobar manualmente arrastre entre columnas, uso con teclado, activación/desactivación y visualización con pantallas estrechas; revisar que no se borren los datos locales existentes.
+- [ ] Fusionar en `main` sólo después de la validación y decisión explícita del usuario.
+
+La posible variante de helicóptero de rescate se propone como proyecto independiente basado en este juego, no como reemplazo de sus archivos, identidad o despliegue.
